@@ -1,0 +1,162 @@
+
+Ratios for attr_1:
+attr_1
+white             6318
+default           5850
+black             5523
+same as saree     5075
+yellow            2475
+multicolor        2455
+pink              2224
+maroon            1604
+same as border    1532
+red               1019
+blue               723
+navy blue          548
+green              438
+peach              192
+solid              182
+grey                50
+purple              40
+orange              12
+
+Ratios for attr_2:
+attr_2
+regular          14684
+woven design      3642
+boxy              3587
+fitted            2988
+zari              2386
+loose             1643
+a-line            1405
+round             1385
+polo              1363
+straight          1343
+temple border      770
+default            648
+no border          272
+solid              144
+
+Ratios for attr_3:
+attr_3
+regular         11400
+crop            10014
+big border       3871
+small border     3079
+knee length      2017
+long             1845
+solid            1422
+printed          1297
+calf length       733
+no border         553
+default            29
+
+Ratios for attr_4:
+attr_4
+printed            13142
+round neck          5280
+default             4698
+multicolor          3258
+daily               2550
+solid               2069
+cream                794
+high                 729
+square neck          554
+sweetheart neck      552
+white                442
+v-neck               395
+typography           353
+navy blue            344
+stylised             299
+yellow               238
+green                222
+pink                 141
+party                134
+NaN                   66
+
+Ratios for attr_5:
+attr_5
+casual           8165
+party            5424
+typography       4285
+funky print      3713
+default          3035
+short sleeves    2564
+net              2013
+quirky           1963
+graphic          1902
+traditional      1213
+daily             743
+solid             728
+wedding           242
+long sleeves      184
+NaN                86
+
+Ratios for attr_6:
+attr_6
+short sleeves          12706
+jacquard                5984
+solid                   4947
+printed                 4197
+default                 3535
+NaN                     2748
+long sleeves            1519
+tassels and latkans      624
+
+Ratios for attr_7:
+attr_7
+regular sleeves    14003
+solid               5032
+woven design        3655
+NaN                 2748
+default             2715
+zari woven          1952
+typography          1895
+same as saree       1582
+cuffed sleeves       886
+quirky               860
+graphic              589
+floral               343
+
+Ratios for attr_8:
+attr_8
+default                  15225
+short sleeves             5563
+zari woven                5512
+three-quarter sleeves     3319
+NaN                       2748
+long sleeves              1518
+solid                     1144
+sleeveless                 720
+woven design               306
+printed                    201
+applique                     4
+
+Ratios for attr_9:
+attr_9
+NaN                17637
+regular sleeves     5407
+regular             2620
+default             2229
+solid               2013
+puff sleeves        1659
+ethnic motif        1240
+sleeveless           687
+floral               656
+peacock              538
+applique             522
+checked              514
+botanical            291
+elephant             247
+
+Ratios for attr_10:
+attr_10
+NaN              24694
+no                6759
+knitted           1510
+default           1320
+yes                744
+ruffles            387
+waist tie-ups      344
+tie-ups            298
+applique           204

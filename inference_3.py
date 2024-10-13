@@ -15,26 +15,26 @@ MAX_PIXELS = 1280 * 28 * 28
 
 # Adapter paths (only one adapter here, can add more as needed)
 adapter_paths = {
-    'cs_men_tshirts': {
-        'model': os.path.join(FINETUNING_DIR, "cs_men_tshirts/checkpoint-150"),
-        'csv_path': os.path.join(CSV_DIR, "cs_men_tshirts_1_missing.csv"),
-        'pred_dir': "/iitjhome/m23csa016/meesho_code/cat_specific_attrs_fine/pred"
-    },
+    # 'cs_men_tshirts': {
+    #     'model': os.path.join(FINETUNING_DIR, "cs_men_tshirts/checkpoint-150"),
+    #     'csv_path': os.path.join(CSV_DIR, "cs_men_tshirts_1_missing.csv"),
+    #     'pred_dir': "/iitjhome/m23csa016/meesho_code/cat_specific_attrs_fine/pred"
+    # },
     'cs_women_tshirts': {
         'model': os.path.join(FINETUNING_DIR, "cs_women_tshirts/checkpoint-50"),
         'csv_path': os.path.join(CSV_DIR, "cs_women_tshirts_1_missing.csv"),
         'pred_dir': "/iitjhome/m23csa016/meesho_code/cat_specific_attrs_fine/pred"
     },
-    'cs_sarees': {
-        'model': os.path.join(FINETUNING_DIR, "cs_sarees/checkpoint-250"),
-        'csv_path': os.path.join(CSV_DIR, "cs_sarees_1_missing.csv"),
-        'pred_dir': "/iitjhome/m23csa016/meesho_code/cat_specific_attrs_fine/pred"
-    },
-    'cs_women_tops': {
-        'model': os.path.join(FINETUNING_DIR, "cs_women_tops/checkpoint-300"),
-        'csv_path': os.path.join(CSV_DIR, "cs_women_tops_1_missing.csv"),
-        'pred_dir': "/iitjhome/m23csa016/meesho_code/cat_specific_attrs_fine/pred"
-    },
+    # 'cs_sarees': {
+    #     'model': os.path.join(FINETUNING_DIR, "cs_sarees/checkpoint-250"),
+    #     'csv_path': os.path.join(CSV_DIR, "cs_sarees_1_missing.csv"),
+    #     'pred_dir': "/iitjhome/m23csa016/meesho_code/cat_specific_attrs_fine/pred"
+    # },
+    # 'cs_women_tops': {
+    #     'model': os.path.join(FINETUNING_DIR, "cs_women_tops/checkpoint-300"),
+    #     'csv_path': os.path.join(CSV_DIR, "cs_women_tops_1_missing.csv"),
+    #     'pred_dir': "/iitjhome/m23csa016/meesho_code/cat_specific_attrs_fine/pred"
+    # },
     'cs_kurtis': {
         'model': os.path.join(FINETUNING_DIR, "cs_kurtis/checkpoint-200"),
         'csv_path': os.path.join(CSV_DIR, "cs_kurtis_1_missing.csv"),
@@ -179,3 +179,5 @@ for dataset, values in adapter_paths.items():
         print(f"Wrote final {len(results_buffer)} items to file.")
 
     print("Processing completed.")
+
+    del model

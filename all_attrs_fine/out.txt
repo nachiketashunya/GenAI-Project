@@ -1,0 +1,269 @@
+10/14/2024 00:04:19 - WARNING - llamafactory.hparams.parser - We recommend enable `upcast_layernorm` in quantized training.
+10/14/2024 00:04:19 - INFO - llamafactory.hparams.parser - Process rank: 0, device: cuda:0, n_gpu: 1, distributed training: False, compute dtype: torch.bfloat16
+[INFO|configuration_utils.py:672] 2024-10-14 00:04:19,487 >> loading configuration file config.json from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/config.json
+[WARNING|modeling_rope_utils.py:379] 2024-10-14 00:04:19,502 >> Unrecognized keys in `rope_scaling` for 'rope_type'='default': {'mrope_section'}
+[INFO|configuration_utils.py:739] 2024-10-14 00:04:19,505 >> Model config Qwen2VLConfig {
+  "_name_or_path": "Qwen/Qwen2-VL-7B-Instruct",
+  "architectures": [
+    "Qwen2VLForConditionalGeneration"
+  ],
+  "attention_dropout": 0.0,
+  "bos_token_id": 151643,
+  "eos_token_id": 151645,
+  "hidden_act": "silu",
+  "hidden_size": 3584,
+  "image_token_id": 151655,
+  "initializer_range": 0.02,
+  "intermediate_size": 18944,
+  "max_position_embeddings": 32768,
+  "max_window_layers": 28,
+  "model_type": "qwen2_vl",
+  "num_attention_heads": 28,
+  "num_hidden_layers": 28,
+  "num_key_value_heads": 4,
+  "rms_norm_eps": 1e-06,
+  "rope_scaling": {
+    "mrope_section": [
+      16,
+      24,
+      24
+    ],
+    "rope_type": "default",
+    "type": "default"
+  },
+  "rope_theta": 1000000.0,
+  "sliding_window": 32768,
+  "tie_word_embeddings": false,
+  "torch_dtype": "bfloat16",
+  "transformers_version": "4.45.0",
+  "use_cache": true,
+  "use_sliding_window": false,
+  "video_token_id": 151656,
+  "vision_config": {
+    "in_chans": 3,
+    "model_type": "qwen2_vl",
+    "spatial_patch_size": 14
+  },
+  "vision_end_token_id": 151653,
+  "vision_start_token_id": 151652,
+  "vision_token_id": 151654,
+  "vocab_size": 152064
+}
+
+[INFO|tokenization_utils_base.py:2214] 2024-10-14 00:04:24,412 >> loading file vocab.json from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/vocab.json
+[INFO|tokenization_utils_base.py:2214] 2024-10-14 00:04:24,414 >> loading file merges.txt from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/merges.txt
+[INFO|tokenization_utils_base.py:2214] 2024-10-14 00:04:24,414 >> loading file tokenizer.json from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/tokenizer.json
+[INFO|tokenization_utils_base.py:2214] 2024-10-14 00:04:24,414 >> loading file added_tokens.json from cache at None
+[INFO|tokenization_utils_base.py:2214] 2024-10-14 00:04:24,414 >> loading file special_tokens_map.json from cache at None
+[INFO|tokenization_utils_base.py:2214] 2024-10-14 00:04:24,414 >> loading file tokenizer_config.json from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/tokenizer_config.json
+[INFO|tokenization_utils_base.py:2478] 2024-10-14 00:04:24,907 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+[INFO|image_processing_base.py:375] 2024-10-14 00:04:25,623 >> loading configuration file preprocessor_config.json from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/preprocessor_config.json
+[INFO|image_processing_base.py:375] 2024-10-14 00:04:25,884 >> loading configuration file preprocessor_config.json from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/preprocessor_config.json
+[INFO|image_processing_base.py:429] 2024-10-14 00:04:25,885 >> Image processor Qwen2VLImageProcessor {
+  "do_convert_rgb": true,
+  "do_normalize": true,
+  "do_rescale": true,
+  "do_resize": true,
+  "image_mean": [
+    0.48145466,
+    0.4578275,
+    0.40821073
+  ],
+  "image_processor_type": "Qwen2VLImageProcessor",
+  "image_std": [
+    0.26862954,
+    0.26130258,
+    0.27577711
+  ],
+  "max_pixels": 12845056,
+  "merge_size": 2,
+  "min_pixels": 3136,
+  "patch_size": 14,
+  "processor_class": "Qwen2VLProcessor",
+  "resample": 3,
+  "rescale_factor": 0.00392156862745098,
+  "size": {
+    "max_pixels": 12845056,
+    "min_pixels": 3136
+  },
+  "temporal_patch_size": 2
+}
+
+[INFO|tokenization_utils_base.py:2214] 2024-10-14 00:04:26,533 >> loading file vocab.json from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/vocab.json
+[INFO|tokenization_utils_base.py:2214] 2024-10-14 00:04:26,533 >> loading file merges.txt from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/merges.txt
+[INFO|tokenization_utils_base.py:2214] 2024-10-14 00:04:26,533 >> loading file tokenizer.json from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/tokenizer.json
+[INFO|tokenization_utils_base.py:2214] 2024-10-14 00:04:26,533 >> loading file added_tokens.json from cache at None
+[INFO|tokenization_utils_base.py:2214] 2024-10-14 00:04:26,533 >> loading file special_tokens_map.json from cache at None
+[INFO|tokenization_utils_base.py:2214] 2024-10-14 00:04:26,533 >> loading file tokenizer_config.json from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/tokenizer_config.json
+[INFO|tokenization_utils_base.py:2478] 2024-10-14 00:04:26,930 >> Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+[INFO|processing_utils.py:744] 2024-10-14 00:04:28,076 >> Processor Qwen2VLProcessor:
+- image_processor: Qwen2VLImageProcessor {
+  "do_convert_rgb": true,
+  "do_normalize": true,
+  "do_rescale": true,
+  "do_resize": true,
+  "image_mean": [
+    0.48145466,
+    0.4578275,
+    0.40821073
+  ],
+  "image_processor_type": "Qwen2VLImageProcessor",
+  "image_std": [
+    0.26862954,
+    0.26130258,
+    0.27577711
+  ],
+  "max_pixels": 12845056,
+  "merge_size": 2,
+  "min_pixels": 3136,
+  "patch_size": 14,
+  "processor_class": "Qwen2VLProcessor",
+  "resample": 3,
+  "rescale_factor": 0.00392156862745098,
+  "size": {
+    "max_pixels": 12845056,
+    "min_pixels": 3136
+  },
+  "temporal_patch_size": 2
+}
+
+- tokenizer: Qwen2TokenizerFast(name_or_path='Qwen/Qwen2-VL-7B-Instruct', vocab_size=151643, model_max_length=32768, is_fast=True, padding_side='left', truncation_side='right', special_tokens={'eos_token': '<|im_end|>', 'pad_token': '<|endoftext|>', 'additional_special_tokens': ['<|im_start|>', '<|im_end|>', '<|object_ref_start|>', '<|object_ref_end|>', '<|box_start|>', '<|box_end|>', '<|quad_start|>', '<|quad_end|>', '<|vision_start|>', '<|vision_end|>', '<|vision_pad|>', '<|image_pad|>', '<|video_pad|>']}, clean_up_tokenization_spaces=False),  added_tokens_decoder={
+	151643: AddedToken("<|endoftext|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151644: AddedToken("<|im_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151645: AddedToken("<|im_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151646: AddedToken("<|object_ref_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151647: AddedToken("<|object_ref_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151648: AddedToken("<|box_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151649: AddedToken("<|box_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151650: AddedToken("<|quad_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151651: AddedToken("<|quad_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151652: AddedToken("<|vision_start|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151653: AddedToken("<|vision_end|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151654: AddedToken("<|vision_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151655: AddedToken("<|image_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+	151656: AddedToken("<|video_pad|>", rstrip=False, lstrip=False, single_word=False, normalized=False, special=True),
+}
+
+{
+  "processor_class": "Qwen2VLProcessor"
+}
+
+10/14/2024 00:04:28 - INFO - llamafactory.data.template - Replace eos token: <|im_end|>
+10/14/2024 00:04:28 - INFO - llamafactory.data.loader - Loading dataset all_attrs.json...
+Running tokenizer on dataset (num_proc=16):   0%|          | 0/12000 [00:00<?, ? examples/s]Running tokenizer on dataset (num_proc=16):   6%|▋         | 750/12000 [02:48<42:07,  4.45 examples/s]Running tokenizer on dataset (num_proc=16):  19%|█▉        | 2250/12000 [02:51<09:43, 16.72 examples/s]Running tokenizer on dataset (num_proc=16):  25%|██▌       | 3000/12000 [02:52<05:56, 25.21 examples/s]Running tokenizer on dataset (num_proc=16):  31%|███▏      | 3750/12000 [02:53<03:40, 37.47 examples/s]Running tokenizer on dataset (num_proc=16):  38%|███▊      | 4500/12000 [02:55<02:24, 51.97 examples/s]Running tokenizer on dataset (num_proc=16):  56%|█████▋    | 6750/12000 [02:57<00:44, 116.98 examples/s]Running tokenizer on dataset (num_proc=16):  62%|██████▎   | 7500/12000 [02:57<00:30, 147.21 examples/s]Running tokenizer on dataset (num_proc=16):  69%|██████▉   | 8250/12000 [02:58<00:19, 190.70 examples/s]Running tokenizer on dataset (num_proc=16):  75%|███████▌  | 9000/12000 [02:58<00:12, 245.48 examples/s]Running tokenizer on dataset (num_proc=16):  81%|████████▏ | 9750/12000 [02:58<00:06, 329.67 examples/s]Running tokenizer on dataset (num_proc=16):  88%|████████▊ | 10500/12000 [02:58<00:03, 433.29 examples/s]Running tokenizer on dataset (num_proc=16):  94%|█████████▍| 11250/12000 [02:58<00:01, 588.58 examples/s]Running tokenizer on dataset (num_proc=16): 100%|██████████| 12000/12000 [02:59<00:00, 726.80 examples/s]Running tokenizer on dataset (num_proc=16): 100%|██████████| 12000/12000 [02:59<00:00, 66.85 examples/s] 
+[INFO|configuration_utils.py:672] 2024-10-14 00:07:30,967 >> loading configuration file config.json from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/config.json
+[WARNING|modeling_rope_utils.py:379] 2024-10-14 00:07:30,967 >> Unrecognized keys in `rope_scaling` for 'rope_type'='default': {'mrope_section'}
+[INFO|configuration_utils.py:739] 2024-10-14 00:07:30,968 >> Model config Qwen2VLConfig {
+  "_name_or_path": "Qwen/Qwen2-VL-7B-Instruct",
+  "architectures": [
+    "Qwen2VLForConditionalGeneration"
+  ],
+  "attention_dropout": 0.0,
+  "bos_token_id": 151643,
+  "eos_token_id": 151645,
+  "hidden_act": "silu",
+  "hidden_size": 3584,
+  "image_token_id": 151655,
+  "initializer_range": 0.02,
+  "intermediate_size": 18944,
+  "max_position_embeddings": 32768,
+  "max_window_layers": 28,
+  "model_type": "qwen2_vl",
+  "num_attention_heads": 28,
+  "num_hidden_layers": 28,
+  "num_key_value_heads": 4,
+  "rms_norm_eps": 1e-06,
+  "rope_scaling": {
+    "mrope_section": [
+      16,
+      24,
+      24
+    ],
+    "rope_type": "default",
+    "type": "default"
+  },
+  "rope_theta": 1000000.0,
+  "sliding_window": 32768,
+  "tie_word_embeddings": false,
+  "torch_dtype": "bfloat16",
+  "transformers_version": "4.45.0",
+  "use_cache": true,
+  "use_sliding_window": false,
+  "video_token_id": 151656,
+  "vision_config": {
+    "in_chans": 3,
+    "model_type": "qwen2_vl",
+    "spatial_patch_size": 14
+  },
+  "vision_end_token_id": 151653,
+  "vision_start_token_id": 151652,
+  "vision_token_id": 151654,
+  "vocab_size": 152064
+}
+
+training example:
+input_ids:
+[151644, 8948, 198, 2610, 525, 264, 10950, 17847, 13, 151645, 198, 151644, 872, 198, 151652, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151653, 22043, 419, 1985, 2168, 315, 364, 42, 5639, 285, 6, 5582, 11, 1128, 525, 279, 1894, 11, 4946, 13597, 11, 3084, 11, 13101, 11, 78660, 367, 11, 5383, 11, 1173, 8734, 21260, 1819, 11, 36153, 5118, 11, 36153, 1261, 98607, 315, 279, 1985, 30, 151645, 198, 151644, 77091, 198, 6, 34571, 516, 364, 64, 8447, 516, 364, 66, 3104, 3084, 516, 364, 48074, 516, 364, 2258, 516, 364, 2258, 516, 364, 2258, 516, 364, 27856, 57314, 42375, 516, 364, 22308, 6, 151645]
+inputs:
+<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+<|vision_start|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|image_pad|><|vision_end|>Given this product image of 'Kurtis' category, what are the color, fit_shape, length, occasion, ornamentation, pattern, print_or_pattern_type, sleeve_length, sleeve_styling of the product?<|im_end|>
+<|im_start|>assistant
+'grey', 'a-line', 'calf length', 'daily', 'default', 'default', 'default', 'three-quarter sleeves', 'regular'<|im_end|>
+label_ids:
+[-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, 6, 34571, 516, 364, 64, 8447, 516, 364, 66, 3104, 3084, 516, 364, 48074, 516, 364, 2258, 516, 364, 2258, 516, 364, 2258, 516, 364, 27856, 57314, 42375, 516, 364, 22308, 6, 151645]
+labels:
+'grey', 'a-line', 'calf length', 'daily', 'default', 'default', 'default', 'three-quarter sleeves', 'regular'<|im_end|>
+10/14/2024 00:07:30 - INFO - llamafactory.model.model_utils.quantization - Quantizing model to 8 bit with bitsandbytes.
+[INFO|modeling_utils.py:3726] 2024-10-14 00:07:31,495 >> loading weights file model.safetensors from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/model.safetensors.index.json
+[INFO|modeling_utils.py:1622] 2024-10-14 00:07:31,514 >> Instantiating Qwen2VLForConditionalGeneration model under default dtype torch.bfloat16.
+[INFO|configuration_utils.py:1099] 2024-10-14 00:07:31,515 >> Generate config GenerationConfig {
+  "bos_token_id": 151643,
+  "eos_token_id": 151645
+}
+
+[WARNING|logging.py:328] 2024-10-14 00:07:31,850 >> `Qwen2VLRotaryEmbedding` can now be fully parameterized by passing the model config through the `config` argument. All other arguments will be removed in v4.46
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:12<00:50, 12.62s/it]Loading checkpoint shards:  40%|████      | 2/5 [00:30<00:46, 15.63s/it]Loading checkpoint shards:  60%|██████    | 3/5 [00:43<00:29, 14.66s/it]Loading checkpoint shards:  80%|████████  | 4/5 [01:03<00:16, 16.56s/it]Loading checkpoint shards: 100%|██████████| 5/5 [01:06<00:00, 11.55s/it]Loading checkpoint shards: 100%|██████████| 5/5 [01:06<00:00, 13.20s/it]
+[INFO|modeling_utils.py:4568] 2024-10-14 00:08:38,163 >> All model checkpoint weights were used when initializing Qwen2VLForConditionalGeneration.
+
+[INFO|modeling_utils.py:4576] 2024-10-14 00:08:38,163 >> All the weights of Qwen2VLForConditionalGeneration were initialized from the model checkpoint at Qwen/Qwen2-VL-7B-Instruct.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use Qwen2VLForConditionalGeneration for predictions without further training.
+[INFO|configuration_utils.py:1054] 2024-10-14 00:08:38,409 >> loading configuration file generation_config.json from cache at /iitjhome/m23csa016/.cache/huggingface/hub/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/51c47430f97dd7c74aa1fa6825e68a813478097f/generation_config.json
+[INFO|configuration_utils.py:1099] 2024-10-14 00:08:38,409 >> Generate config GenerationConfig {
+  "bos_token_id": 151643,
+  "do_sample": true,
+  "eos_token_id": [
+    151645,
+    151643
+  ],
+  "pad_token_id": 151643,
+  "temperature": 0.01,
+  "top_k": 1,
+  "top_p": 0.001
+}
+
+10/14/2024 00:08:38 - INFO - llamafactory.model.model_utils.checkpointing - Gradient checkpointing enabled.
+10/14/2024 00:08:38 - INFO - llamafactory.model.model_utils.visual - Casting multimodal projector outputs in torch.bfloat16.
+10/14/2024 00:08:38 - INFO - llamafactory.model.model_utils.attention - Using torch SDPA for faster training and inference.
+10/14/2024 00:08:38 - INFO - llamafactory.model.adapter - Upcasting trainable params to float32.
+10/14/2024 00:08:38 - INFO - llamafactory.model.adapter - Fine-tuning method: LoRA
+10/14/2024 00:08:38 - INFO - llamafactory.model.model_utils.misc - Found linear modules: k_proj,o_proj,q_proj,gate_proj,v_proj,down_proj,up_proj
+10/14/2024 00:08:40 - INFO - llamafactory.model.loader - trainable params: 20,185,088 || all params: 8,311,560,704 || trainable%: 0.2429
+Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+[INFO|trainer.py:667] 2024-10-14 00:08:40,178 >> Using auto half precision backend
+[INFO|trainer.py:2243] 2024-10-14 00:08:43,465 >> ***** Running training *****
+[INFO|trainer.py:2244] 2024-10-14 00:08:43,465 >>   Num examples = 10,800
+[INFO|trainer.py:2245] 2024-10-14 00:08:43,465 >>   Num Epochs = 6
+[INFO|trainer.py:2246] 2024-10-14 00:08:43,465 >>   Instantaneous batch size per device = 8
+[INFO|trainer.py:2249] 2024-10-14 00:08:43,465 >>   Total train batch size (w. parallel, distributed & accumulation) = 32
+[INFO|trainer.py:2250] 2024-10-14 00:08:43,465 >>   Gradient Accumulation steps = 4
+[INFO|trainer.py:2251] 2024-10-14 00:08:43,465 >>   Total optimization steps = 2,022
+[INFO|trainer.py:2252] 2024-10-14 00:08:43,472 >>   Number of trainable parameters = 20,185,088
+  0%|          | 0/2022 [00:00<?, ?it/s]/iitjhome/m23csa016/.conda/envs/meesho/lib/python3.10/site-packages/bitsandbytes/autograd/_functions.py:316: UserWarning: MatMul8bitLt: inputs will be cast from torch.float32 to float16 during quantization
+  warnings.warn(f"MatMul8bitLt: inputs will be cast from {A.dtype} to float16 during quantization")
+/iitjhome/m23csa016/.conda/envs/meesho/lib/python3.10/site-packages/bitsandbytes/autograd/_functions.py:316: UserWarning: MatMul8bitLt: inputs will be cast from torch.bfloat16 to float16 during quantization
+  warnings.warn(f"MatMul8bitLt: inputs will be cast from {A.dtype} to float16 during quantization")
+/iitjhome/m23csa016/.conda/envs/meesho/lib/python3.10/site-packages/torch/utils/checkpoint.py:295: FutureWarning: `torch.cpu.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cpu', args...)` instead.
+  with torch.enable_grad(), device_autocast_ctx, torch.cpu.amp.autocast(**ctx.cpu_autocast_kwargs):  # type: ignore[attr-defined]
+  0%|          | 1/2022 [00:23<12:57:13, 23.07s/it]  0%|          | 2/2022 [00:35<9:18:32, 16.59s/it]   0%|          | 3/2022 [00:47<8:09:14, 14.54s/it]  0%|          | 4/2022 [00:59<7:39:15, 13.65s/it]  0%|          | 5/2022 [01:12<7:34:20, 13.52s/it]                                                    0%|          | 5/2022 [01:12<7:34:20, 13.52s/it]  0%|          | 6/2022 [01:25<7:23:57, 13.21s/it]  0%|          | 7/2022 [01:38<7:17:05, 13.02s/it]  0%|          | 8/2022 [01:50<7:13:44, 12.92s/it]  0%|          | 9/2022 [02:03<7:08:09, 12.76s/it]  0%|          | 10/2022 [02:15<7:03:01, 12.62s/it]                                                     0%|          | 10/2022 [02:15<7:03:01, 12.62s/it]  1%|          | 11/2022 [02:27<6:57:45, 12.46s/it]  1%|          | 12/2022 [02:39<6:54:18, 12.37s/it]  1%|          | 13/2022 [02:52<6:54:32, 12.38s/it]  1%|          | 14/2022 [03:04<6:52:02, 12.31s/it]  1%|          | 15/2022 [03:16<6:54:10, 12.38s/it]                                                     1%|          | 15/2022 [03:16<6:54:10, 12.38s/it]  1%|          | 16/2022 [03:29<6:53:42, 12.37s/it]  1%|          | 17/2022 [03:41<6:53:18, 12.37s/it]  1%|          | 18/2022 [03:53<6:49:32, 12.26s/it]  1%|          | 19/2022 [04:05<6:46:38, 12.18s/it]  1%|          | 20/2022 [04:17<6:48:48, 12.25s/it]                                                     1%|          | 20/2022 [04:17<6:48:48, 12.25s/it]  1%|          | 21/2022 [04:29<6:45:21, 12.15s/it]  1%|          | 22/2022 [04:42<6:47:06, 12.21s/it]  1%|          | 23/2022 [04:54<6:46:53, 12.21s/it]  1%|          | 24/2022 [05:06<6:49:06, 12.29s/it]  1%|          | 25/2022 [05:19<6:50:06, 12.32s/it]                                                     1%|          | 25/2022 [05:19<6:50:06, 12.32s/it]  1%|▏         | 26/2022 [05:31<6:50:47, 12.35s/it]  1%|▏         | 27/2022 [05:44<6:50:53, 12.36s/it]  1%|▏         | 28/2022 [05:56<6:48:06, 12.28s/it]  1%|▏         | 29/2022 [06:07<6:42:30, 12.12s/it]  1%|▏         | 30/2022 [06:18<6:31:21, 11.79s/it]                                                     1%|▏         | 30/2022 [06:18<6:31:21, 11.79s/it]  2%|▏         | 31/2022 [06:30<6:30:53, 11.78s/it]  2%|▏         | 32/2022 [06:42<6:28:13, 11.71s/it]  2%|▏         | 33/2022 [06:54<6:31:03, 11.80s/it]  2%|▏         | 34/2022 [07:06<6:32:34, 11.85s/it]  2%|▏         | 35/2022 [07:17<6:30:59, 11.81s/it]                                                     2%|▏         | 35/2022 [07:17<6:30:59, 11.81s/it]  2%|▏         | 36/2022 [07:30<6:34:13, 11.91s/it]  2%|▏         | 37/2022 [07:42<6:42:49, 12.18s/it]  2%|▏         | 38/2022 [07:55<6:47:29, 12.32s/it]  2%|▏         | 39/2022 [08:07<6:46:56, 12.31s/it]  2%|▏         | 40/2022 [08:19<6:43:59, 12.23s/it]                                                     2%|▏         | 40/2022 [08:19<6:43:59, 12.23s/it]  2%|▏         | 41/2022 [08:32<6:45:30, 12.28s/it]  2%|▏         | 42/2022 [08:44<6:47:34, 12.35s/it]  2%|▏         | 43/2022 [08:56<6:44:36, 12.27s/it]  2%|▏         | 44/2022 [09:08<6:36:07, 12.02s/it]  2%|▏         | 45/2022 [09:20<6:37:47, 12.07s/it]                                                     2%|▏         | 45/2022 [09:20<6:37:47, 12.07s/it]  2%|▏         | 46/2022 [09:33<6:42:05, 12.21s/it]  2%|▏         | 47/2022 [09:45<6:42:53, 12.24s/it]  2%|▏         | 48/2022 [09:57<6:42:22, 12.23s/it]  2%|▏         | 49/2022 [10:09<6:36:49, 12.07s/it]  2%|▏         | 50/2022 [10:21<6:33:59, 11.99s/it]                                                     2%|▏         | 50/2022 [10:21<6:33:59, 11.99s/it]  3%|▎         | 51/2022 [10:33<6:40:40, 12.20s/it]  3%|▎         | 52/2022 [10:46<6:41:27, 12.23s/it]  3%|▎         | 53/2022 [10:58<6:40:24, 12.20s/it]  3%|▎         | 54/2022 [11:10<6:39:45, 12.19s/it]  3%|▎         | 55/2022 [11:22<6:38:44, 12.16s/it]                                                     3%|▎         | 55/2022 [11:22<6:38:44, 12.16s/it]  3%|▎         | 56/2022 [11:34<6:41:42, 12.26s/it]  3%|▎         | 57/2022 [11:46<6:35:44, 12.08s/it]  3%|▎         | 58/2022 [11:58<6:35:03, 12.07s/it]  3%|▎         | 59/2022 [12:10<6:37:27, 12.15s/it]  3%|▎         | 60/2022 [12:22<6:33:03, 12.02s/it]                                                     3%|▎         | 60/2022 [12:22<6:33:03, 12.02s/it]  3%|▎         | 61/2022 [12:34<6:31:18, 11.97s/it]  3%|▎         | 62/2022 [12:46<6:34:42, 12.08s/it]  3%|▎         | 63/2022 [12:59<6:42:53, 12.34s/it]  3%|▎         | 64/2022 [13:11<6:38:34, 12.21s/it]  3%|▎         | 65/2022 [13:24<6:39:08, 12.24s/it]                                                     3%|▎         | 65/2022 [13:24<6:39:08, 12.24s/it]  3%|▎         | 66/2022 [13:36<6:40:03, 12.27s/it]  3%|▎         | 67/2022 [13:48<6:39:35, 12.26s/it]  3%|▎         | 68/2022 [14:00<6:37:55, 12.22s/it]  3%|▎         | 69/2022 [14:13<6:41:52, 12.35s/it]  3%|▎         | 70/2022 [14:25<6:36:00, 12.17s/it]                                                     3%|▎         | 70/2022 [14:25<6:36:00, 12.17s/it]  4%|▎         | 71/2022 [14:36<6:29:41, 11.98s/it]  4%|▎         | 72/2022 [14:48<6:23:14, 11.79s/it]  4%|▎         | 73/2022 [14:59<6:22:39, 11.78s/it]  4%|▎         | 74/2022 [15:11<6:21:42, 11.76s/it]  4%|▎         | 75/2022 [15:23<6:23:55, 11.83s/it]                                                     4%|▎         | 75/2022 [15:23<6:23:55, 11.83s/it]  4%|▍         | 76/2022 [15:35<6:27:48, 11.96s/it]  4%|▍         | 77/2022 [15:47<6:28:21, 11.98s/it]  4%|▍         | 78/2022 [16:00<6:34:04, 12.16s/it]  4%|▍         | 79/2022 [16:13<6:40:16, 12.36s/it]  4%|▍         | 80/2022 [16:24<6:33:58, 12.17s/it]                                                     4%|▍         | 80/2022 [16:24<6:33:58, 12.17s/it]  4%|▍         | 81/2022 [16:37<6:35:08, 12.21s/it]  4%|▍         | 82/2022 [16:49<6:31:54, 12.12s/it]  4%|▍         | 83/2022 [17:01<6:30:54, 12.10s/it]  4%|▍         | 84/2022 [17:13<6:31:32, 12.12s/it]
