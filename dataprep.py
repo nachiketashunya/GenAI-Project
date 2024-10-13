@@ -3,9 +3,9 @@ import json
 import os
 
 # Paths
-csv_file_path = '/iitjhome/m23csa016/meesho_code/cat_specific_attrs_fine/cs_sarees_10k.csv'  # Path to your CSV file
+csv_file_path = '/iitjhome/m23csa016/meesho_code/women_group_attrs_fine/women_group_attrs_10k.csv'  # Path to your CSV file
 image_folder_path = '/scratch/data/m23csa016/meesho_data/train_images'  # Folder where your images are stored
-output_json_file = '/iitjhome/m23csa016/meesho_code/cat_specific_attrs_fine/cs_sarees_10k.json'  # Output JSON file
+output_json_file = '/iitjhome/m23csa016/meesho_code/women_group_attrs_fine/women_group_attrs_10k.json'  # Output JSON file
 
 # Initialize list to store the dataset
 dataset = []
@@ -25,17 +25,14 @@ with open(csv_file_path, 'r') as csv_file:
         # Ensure the image exists in the train/ folder before adding to the dataset
         if os.path.exists(image_path):
             category = row['Category']
-            blouse_pattern = row['blouse_pattern']
-            border = row['border']
-            border_width = row['border_width']
-            occasion = row['occasion']
-            ornamentation = row['ornamentation']
-            pallu_details = row['pallu_details']
-            transparency = row['transparency']
+            fit_shape = row['fit_shape']
+            sleeve_length = row['sleeve_length']
+            sleeve_styling = row['sleeve_styling']
+            length = row['length']
 
-            prompt = f"<image>Analyze this {category} image and identify: blouse_pattern, border, border_width, occasion, ornamentation, pallu_details, transparency"
+            prompt = f"<image>Given this product image of '{category}' category, what are fit_shape, sleeve_length, sleeve_styling, length of the product?"
 
-            content = f"{blouse_pattern}, {border}, {border_width}, {occasion}, {ornamentation}, {pallu_details}, {transparency}"
+            content = f"'{fit_shape}', '{sleeve_length}', '{sleeve_styling}', '{length}'"
 
             # Construct the conversation in ShareGPT format
             conversation = {

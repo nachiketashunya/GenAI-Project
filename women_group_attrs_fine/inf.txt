@@ -1,0 +1,5 @@
+Unrecognized keys in `rope_scaling` for 'rope_type'='default': {'mrope_section'}
+You are attempting to use Flash Attention 2.0 without specifying a torch dtype. This might lead to unexpected behaviour
+`Qwen2VLRotaryEmbedding` can now be fully parameterized by passing the model config through the `config` argument. All other arguments will be removed in v4.46
+Loading model...
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:03<00:13,  3.41s/it]Loading checkpoint shards:  40%|████      | 2/5 [00:06<00:09,  3.17s/it]Loading checkpoint shards:  60%|██████    | 3/5 [00:09<00:06,  3.10s/it]Loading checkpoint shards:  80%|████████  | 4/5 [00:12<00:03,  3.05s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:13<00:00,  2.29s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:13<00:00,  2.67s/it]

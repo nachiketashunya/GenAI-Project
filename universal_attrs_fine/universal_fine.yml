@@ -1,7 +1,7 @@
 model_name_or_path: Qwen/Qwen2-VL-7B-Instruct
 bf16: true
 cutoff_len: 1024
-dataset: universal_finetune
+dataset: universal_attrs
 dataset_dir: /iitjhome/m23csa016/meesho_code/LLaMA-Factory/data/
 ddp_timeout: 180000000
 do_train: true
@@ -11,7 +11,7 @@ finetuning_type: lora
 flash_attn: auto
 gradient_accumulation_steps: 4
 include_num_input_tokens_seen: true
-learning_rate: 5.0e-03
+learning_rate: 5.0e-05
 logging_steps: 5
 lora_alpha: 16
 lora_dropout: 0
@@ -20,7 +20,7 @@ lora_target: all
 lr_scheduler_type: reduce_lr_on_plateau
 max_grad_norm: 1.0
 max_samples: 12000
-num_train_epochs: 10.0
+num_train_epochs: 3.0
 optim: adamw_torch
 output_dir: /scratch/data/m23csa016/meesho_data/finetuning/universal_attrs
 packing: false

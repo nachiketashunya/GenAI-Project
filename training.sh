@@ -1,1 +1,0 @@
-FORCE_TORCHRUN=1 CUDA_VISIBLE_DEVICES=0,1 llamafactory-cli train /iitjhome/m23csa016/meesho_code/women_group_attrs_fine/women_group_fine.yml &> /iitjhome/m23csa016/meesho_code/women_group_attrs_fine/results.txt &
