@@ -6,11 +6,12 @@ import torch
 from qwen_vl_utils import process_vision_info
 from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 from peft import PeftModel, PeftConfig
+from config import CODE_DIR, DATA_DIR
 
 # Define directories and constants
-TRAIN_IMG_DIR = "/scratch/data/m23csa016/meesho_data/train_images"
-FINETUNING_DIR = "/scratch/data/m23csa016/meesho_data/finetuning"
-CSV_DIR = "/iitjhome/m23csa016/meesho_code/1_missing_attrs"
+TRAIN_IMG_DIR = os.path.join(DATA_DIR, "train_images")
+FINETUNING_DIR = os.path.join(DATA_DIR, "finetuning")
+CSV_DIR = os.path.join(CODE_DIR, "1_missing_attrs")
 MAX_PIXELS = 1280 * 28 * 28
 
 # Adapter paths (only one adapter here, can add more as needed)
@@ -23,7 +24,7 @@ adapter_paths = {
     'cs_women_tshirts': {
         'model': os.path.join(FINETUNING_DIR, "cs_women_tshirts/checkpoint-50"),
         'csv_path': os.path.join(CSV_DIR, "cs_women_tshirts_1_missing.csv"),
-        'pred_dir': "/iitjhome/m23csa016/meesho_code/cat_specific_attrs_fine/pred"
+        'pred_dir': os.path.join(CODE_DIR, "cat_specific_attrs_fine/pred")
     },
     # 'cs_sarees': {
     #     'model': os.path.join(FINETUNING_DIR, "cs_sarees/checkpoint-250"),
@@ -38,7 +39,7 @@ adapter_paths = {
     'cs_kurtis': {
         'model': os.path.join(FINETUNING_DIR, "cs_kurtis/checkpoint-200"),
         'csv_path': os.path.join(CSV_DIR, "cs_kurtis_1_missing.csv"),
-        'pred_dir': "/iitjhome/m23csa016/meesho_code/cat_specific_attrs_fine/pred"
+        'pred_dir': os.path.join(CODE_DIR, "cat_specific_attrs_fine/pred")
     }    
 }
 

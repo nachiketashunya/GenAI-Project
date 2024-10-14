@@ -6,11 +6,12 @@ import torch
 from qwen_vl_utils import process_vision_info
 from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 from peft import PeftModel, PeftConfig
+from config import CODE_DIR, DATA_DIR
 
 # Define directories and constants
-TEST_IMG_DIR = "/scratch/data/m23csa016/meesho_data/train_images"
-FINETUNING_DIR = "/scratch/data/m23csa016/meesho_data/finetuning"
-CSV_DIR = "/iitjhome/m23csa016/meesho_code/1_missing_attrs"
+TEST_IMG_DIR = os.path.join(DATA_DIR, "train_images")
+FINETUNING_DIR = os.path.join(DATA_DIR, "finetuning")
+CSV_DIR = os.path.join(CODE_DIR, "1_missing_attrs")
 MAX_PIXELS = 1280 * 28 * 28
 
 # Adapter paths (only one adapter here, can add more as needed)
@@ -18,7 +19,7 @@ adapter_paths = {
     'women_group_attrs': {
         'model': os.path.join(FINETUNING_DIR, "women_group_attrs/checkpoint-700"),
         'csv_path': os.path.join(CSV_DIR, "women_group_attrs_1_missing.csv"),
-        'pred_dir': "/iitjhome/m23csa016/meesho_code/women_group_attrs_fine/pred"
+        'pred_dir': os.path.join(CODE_DIR, "women_group_attrs_fine/pred")
     }
 }
 

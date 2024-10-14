@@ -1,14 +1,14 @@
 import subprocess
 import os
+from config import CODE_DIR, DATA_DIR
 
 # List of YAML files and their corresponding output directories
-code_dir = "/iitjhome/m23csa016/meesho_code"
-data_dir = "/scratch/data/m23csa016/meesho_data/finetuning"
+FINETUNING_DIR = os.path.join(DATA_DIR, "finetuning")
 
 # List of YAML files and their corresponding output directories
 yaml_files = [
-    (os.path.join(code_dir, "universal_attrs_fine/universal_fine.yml"), os.path.join(data_dir, "universal_attrs")),
-    (os.path.join(code_dir, "women_group_attrs_fine/women_group_fine.yml"), os.path.join(data_dir, "women_group_attrs"))
+    (os.path.join(CODE_DIR, "universal_attrs_fine/universal_fine.yml"), os.path.join(FINETUNING_DIR, "universal_attrs")),
+    (os.path.join(CODE_DIR, "women_group_attrs_fine/women_group_fine.yml"), os.path.join(FINETUNING_DIR, "women_group_attrs"))
 ]
 
 def run_training(yaml_file, output_dir):

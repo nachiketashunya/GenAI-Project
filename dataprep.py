@@ -1,11 +1,12 @@
 import csv
 import json
 import os
+from config import CODE_DIR, DATA_DIR
 
 # Paths
-csv_file_path = '/iitjhome/m23csa016/meesho_code/all_attrs_fine/all_attrs.csv'  # Path to your CSV file
-image_folder_path = '/scratch/data/m23csa016/meesho_data/train_images'  # Folder where your images are stored
-output_json_file = '/iitjhome/m23csa016/meesho_code/all_attrs_fine/all_attrs.json'  # Output JSON file
+csv_file_path = os.path.join(CODE_DIR, "all_attrs_fine/all_attrs.csv")  # Path to your CSV file
+image_folder_path = os.path.join(DATA_DIR, "train_images")  # Folder where your images are stored
+output_json_file = os.path.join(CODE_DIR, "all_attrs.json") # Output JSON file
 
 # Initialize list to store the dataset
 dataset = []

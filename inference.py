@@ -6,19 +6,20 @@ import torch
 from qwen_vl_utils import process_vision_info
 from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 from peft import PeftModel, PeftConfig
+from config import DATA_DIR, CODE_DIR
 
 # Define directories and constants
-TEST_IMG_DIR = "/scratch/data/m23csa016/meesho_data/test_images"
-FINETUNING_DIR = "/scratch/data/m23csa016/meesho_data/finetuning"
-CSV_DIR = "/scratch/data/m23csa016/meesho_data"
+TEST_IMG_DIR = os.path.join(DATA_DIR, "test_images")
+FINETUNING_DIR = os.path.join(DATA_DIR, "finetuning")
+CSV_DIR = os.path.join(DATA_DIR, "meesho_data")
 MAX_PIXELS = 1280 * 28 * 28
 
 # Adapter paths (only one adapter here, can add more as needed)
 adapter_paths = {
     'all_attrs': {
-        'model': os.path.join(FINETUNING_DIR, "all_attrs/checkpoint-1600"),
+        'model': os.path.join(FINETUNING_DIR, "all_attrs/"),
         'csv_path': os.path.join(CSV_DIR, "test.csv"),
-        'pred_dir': "/iitjhome/m23csa016/meesho_code/all_attrs_fine/pred"
+        'pred_dir': os.path.join(DATA_DIR, "all_attrs_fine/pred")
     }
 }
 
@@ -127,17 +128,17 @@ for dataset, values in adapter_paths.items():
     df = pd.read_csv(csv_path)
     print(f"Data loaded. Total rows: {len(df)}")
 
-    output_file = f"predicted_{dataset}.csv"
+    output_file = os.path.join(pred_dir, f"predicted_{dataset}.csv")
     fieldnames = ['id', 'Category', 'len', 'attr_1', 'attr_2', 'attr_3', 'attr_4', 'attr_5', 'attr_6', 'attr_7', 'attr_8', 'attr_9', 'attr_10']
 
     # Initialize CSV file with headers if it doesn't exist
     if not os.path.exists(output_file):
-        with open(os.path.join(pred_dir, output_file), 'w', newline='') as f:
+        with open(output_file, 'w', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
 
     # Set chunk size and buffer for results
-    chunk_size = 1  # Adjust based on GPU memory
+    chunk_size = 4  # Adjust based on GPU memory
     results_buffer = []
 
     # Process the CSV file in chunks sequentially
@@ -147,7 +148,7 @@ for dataset, values in adapter_paths.items():
         try:
             chunk_results = process_chunk(chunk, model_name, adapter_path)
             results_buffer.extend(chunk_results)
-            print(f"Processed {len(results_buffer)} items so far.")
+            print(f"Total Processed: {i+1}")
 
             # Write to file every 500 processed items
             if len(results_buffer) >= 500:
