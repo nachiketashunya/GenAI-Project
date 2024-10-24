@@ -1,168 +1,383 @@
-# Load data
+import torch
+import pdb
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+from PIL import Image
+import pandas as pd
+import clip
+from collections import defaultdict
+import numpy as np
+import os
+from tqdm.auto import tqdm
+import time
+import torch.nn.functional as F
+from torch.optim.lr_scheduler import LambdaLR
+import math
+import json
 import pandas as pd
 import os
-import csv
+from tqdm import tqdm
 import torch
-from qwen_vl_utils import process_vision_info
-from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
-from peft import PeftModel, PeftConfig
-from config import DATA_DIR, CODE_DIR
+from PIL import Image
+import clip
+import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader
 
-# Define directories and constants
-TEST_IMG_DIR = os.path.join(DATA_DIR, "test_images")
-FINETUNING_DIR = os.path.join(DATA_DIR, "finetuning")
-CSV_DIR = os.path.join(DATA_DIR, "meesho_data")
-MAX_PIXELS = 1280 * 28 * 28
-
-# Adapter paths (only one adapter here, can add more as needed)
-adapter_paths = {
-    'all_attrs': {
-        'model': os.path.join(FINETUNING_DIR, "all_attrs/"),
-        'csv_path': os.path.join(CSV_DIR, "test.csv"),
-        'pred_dir': os.path.join(DATA_DIR, "all_attrs_fine/pred")
+# Category to attribute mapping
+category_class_attribute_mapping = {
+    'Kurtis': {
+        'color': 'attr_1',
+        'fit_shape': 'attr_2',
+        'length': 'attr_3',
+        'occasion': 'attr_4',
+        'ornamentation': 'attr_5',
+        'pattern': 'attr_6',
+        'print_or_pattern_type': 'attr_7',
+        'sleeve_length': 'attr_8',
+        'sleeve_styling': 'attr_9'
+    },
+    'Men Tshirts': {
+        'color': 'attr_1',
+        'neck': 'attr_2',
+        'pattern': 'attr_3',
+        'print_or_pattern_type': 'attr_4',
+        'sleeve_length': 'attr_5'
+    },
+    'Sarees': {
+        'blouse_pattern': 'attr_1',
+        'border': 'attr_2',
+        'border_width': 'attr_3',
+        'color': 'attr_4',
+        'occasion': 'attr_5',
+        'ornamentation': 'attr_6',
+        'pallu_details': 'attr_7',
+        'pattern': 'attr_8',
+        'print_or_pattern_type': 'attr_9',
+        'transparency': 'attr_10'
+    },
+    'Women Tops & Tunics': {
+        'color': 'attr_1',
+        'fit_shape': 'attr_2',
+        'length': 'attr_3',
+        'neck_collar': 'attr_4',
+        'occasion': 'attr_5',
+        'pattern': 'attr_6',
+        'print_or_pattern_type': 'attr_7',
+        'sleeve_length': 'attr_8',
+        'sleeve_styling': 'attr_9',
+        'surface_styling': 'attr_10'
+    },
+    'Women Tshirts': {
+        'color': 'attr_1',
+        'fit_shape': 'attr_2',
+        'length': 'attr_3',
+        'pattern': 'attr_4',
+        'print_or_pattern_type': 'attr_5',
+        'sleeve_length': 'attr_6',
+        'sleeve_styling': 'attr_7',
+        'surface_styling': 'attr_8'
     }
 }
 
-
-category_prompts = {
-    "Women Tshirts": "Given this product image of 'Women Tshirts' category, what are the color, fit_shape, length, pattern, print_or_pattern_type, sleeve_length, sleeve_styling, surface_styling of the product?",
-    "Women Tops & Tunics": "Given this product image of 'Women Tops & Tunics' category, what are the color, fit_shape, length, neck_collar, occasion, pattern, print_or_pattern_type, sleeve_length, sleeve_styling, surface_styling of the product?",
-    "Kurtis": "Given this product image of 'Kurtis' category, what are the color, fit_shape, length, occasion, ornamentation, pattern, print_or_pattern_type, sleeve_length, sleeve_styling of the product?",
-    "Men Tshirts": "Given this product image of 'Men Tshirts' category, what are the color, neck, pattern, print_or_pattern_type, sleeve_length of the product?",
-    "Sarees": "Given this product image of 'Sarees' category, what are the blouse_pattern, border, border_width, color, occasion, ornamentation, pallu_details, pattern, print_or_pattern_type, transparency of the product?"
-}
-
-
-# Define a function to load model and process data chunks
-def process_chunk(chunk, model_name, adapter_path):
-    # Prepare messages for each row in the chunk
-    messages = []
-    for c in chunk.itertuples():
-        image_name = str(c.id).zfill(6) + '.jpg'
-    
-        prompt = category_prompts[c.Category]
+class CategoryAwareAttributePredictor(nn.Module):
+    def __init__(self, clip_dim=512, category_attributes=None, attribute_dims=None):
+        super(CategoryAwareAttributePredictor, self).__init__()
         
-        message = [{
-            "role": "user",
-            "content": [
-                {"type": "image", "image": os.path.join(TEST_IMG_DIR, image_name)},
-                {"type": "text", "text": prompt}
-            ]
-        }]
-        messages.append(message)
+        self.category_attributes = category_attributes
+        
+        # Create prediction heads for each category-attribute combination
+        self.attribute_predictors = nn.ModuleDict()
+        
+        self.dropout_rate = 0.2
+        self.l2_lambda = 0.01
+        self.hidden_dims = [512, 256]
+        
+        # Layer normalization for input
+        self.input_norm = nn.LayerNorm(clip_dim)
 
-    # Process inputs for the model
-    texts = [processor.apply_chat_template(msg, tokenize=False, add_generation_prompt=True) for msg in messages]
-    image_inputs, video_inputs = process_vision_info(messages)
-    inputs = processor(
-        text=texts,
-        images=image_inputs,
-        videos=video_inputs,
-        padding=True,
-        return_tensors="pt",
+        for category, attributes in category_attributes.items():
+            for attr_name in attributes.keys():
+                key = f"{category}_{attr_name}"
+                if key in attribute_dims:
+                    layers = []
+                    
+                    # Input layer with normalization and dropout
+                    in_dim = clip_dim
+                    for hidden_dim in self.hidden_dims:
+                        layers.extend([
+                            nn.Linear(in_dim, hidden_dim),
+                            # nn.BatchNorm1d(hidden_dim),  # Batch normalization
+                            nn.ReLU(),
+                            nn.Dropout(self.dropout_rate)
+                        ])
+
+                        in_dim = hidden_dim
+                    
+                    # Output layer
+                    layers.append(nn.Linear(in_dim, attribute_dims[key]))
+                    
+                    self.attribute_predictors[key] = nn.Sequential(*layers)
+                    
+                    # Weight initialization
+                    self._initialize_weights(self.attribute_predictors[key])
+    
+    def _initialize_weights(self, module):
+        for m in module.modules():
+            if isinstance(m, nn.Linear):
+                # He initialization
+                nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+
+    def forward(self, clip_features, category, training=False):
+        # results = {}
+        # category_attrs = self.category_attributes[category]
+
+        # Convert to float and apply input normalization
+        clip_features = self.input_norm(clip_features.float())
+        # clip_features = clip_features.float()
+        
+        results = {}
+        regularization_loss = 0.0
+        category_attrs = self.category_attributes[category]
+        
+        # Enable/disable dropout based on training mode
+        self.train(training)
+        
+        for attr_name in category_attrs.keys():
+            key = f"{category}_{attr_name}"
+            if key in self.attribute_predictors:
+                results[key] = self.attribute_predictors[key](clip_features)
+
+                # Calculate L2 regularization loss during training
+                if training:
+                    for param in self.attribute_predictors[key].parameters():
+                        regularization_loss += torch.norm(param, p=2)
+        
+        # Scale regularization loss
+        regularization_loss *= self.l2_lambda
+        
+        return results, regularization_loss
+    
+    def get_l1_loss(self):
+        """Calculate L1 regularization loss"""
+        l1_loss = 0
+        for key in self.attribute_predictors:
+            for param in self.attribute_predictors[key].parameters():
+                l1_loss += torch.abs(param).sum()
+        return l1_loss
+
+    def apply_weight_decay(self, weight_decay=0.01):
+        """Apply manual weight decay to all parameters"""
+        with torch.no_grad():
+            for key in self.attribute_predictors:
+                for param in self.attribute_predictors[key].parameters():
+                    param.mul_(1 - weight_decay)
+
+class ImageDataset(Dataset):
+    """Dataset class for batch processing of images"""
+    def __init__(self, image_paths, categories, clip_preprocess):
+        self.image_paths = image_paths
+        self.categories = categories
+        self.clip_preprocess = clip_preprocess
+        
+    def __len__(self):
+        return len(self.image_paths)
+    
+    def __getitem__(self, idx):
+        image_path = self.image_paths[idx]
+        try:
+            image = Image.open(image_path).convert('RGB')
+            image = self.clip_preprocess(image)
+        except Exception as e:
+            print(f"Error loading image {image_path}: {str(e)}")
+            # Return a blank image in case of error
+            image = torch.zeros(3, 224, 224)
+        return image, self.categories[idx]
+
+def load_models(model_path, device):
+    """Load both the attribute predictor and CLIP model from checkpoint"""
+    checkpoint = torch.load(model_path, map_location=device)
+    
+    # Load CLIP model from checkpoint
+    clip_model, clip_preprocess = clip.load("ViT-B/32", device=device)
+    clip_model.load_state_dict(checkpoint['clip_model_state_dict'])
+    clip_model.eval()
+    
+    
+    # Load attribute predictor
+    attribute_dims = {
+        key: len(values) 
+        for key, values in checkpoint['attribute_classes'].items()
+    }
+    
+    model = CategoryAwareAttributePredictor(
+        clip_dim=512,
+        category_attributes=checkpoint['category_mapping'],
+        attribute_dims=attribute_dims
+    ).to(device)
+    
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model.eval()
+    
+    return model, clip_model, clip_preprocess, checkpoint
+
+def predict_batch(images, categories, clip_model, model, checkpoint, clip_preprocess, device='cuda', batch_size=32):
+    """Process a batch of images"""
+    all_predictions = []
+    
+    # Create DataLoader for batch processing
+        # Calculate total batches for progress bar
+    dataset = ImageDataset(images, categories, clip_preprocess)
+    dataloader = DataLoader(
+        dataset, 
+        batch_size=batch_size, 
+        num_workers=4, 
+        pin_memory=True,
+        prefetch_factor=2  # Prefetch 2 batches per worker
     )
-    inputs = inputs.to("cuda")
-
-    # Generate predictions
+    
+    from tqdm.auto import tqdm 
+    total_batches = len(dataloader)
     with torch.no_grad():
-        generated_ids = model.generate(**inputs, max_new_tokens=128)
+        # Main progress bar for batches
+        pbar = tqdm(dataloader, total=total_batches, desc="Processing batches", 
+                   unit="batch", position=0, leave=True)
+        
+        for batch_images, batch_categories in pbar:
+            batch_images = batch_images.to(device, non_blocking=True)
+            
+            # Get CLIP features for the batch
+            clip_features = clip_model.encode_image(batch_images)
+            
+            # Process each category in the batch
+            batch_predictions = []
+            for idx, category in enumerate(batch_categories):
+                if category not in checkpoint['category_mapping']:
+                    batch_predictions.append({})
+                    continue
+                
+                # Get model predictions for single image
+                predictions, _ = model(clip_features[idx:idx+1], category)
+                
+                # Convert predictions to attribute values
+                predicted_attributes = {}
+                for key, pred in predictions.items():
+                    _, predicted_idx = torch.max(pred, 1)
+                    predicted_idx = predicted_idx.item()
+                    
+                    attr_name = key.split('_', 1)[1]
+                    attr_values = checkpoint['attribute_classes'][key]
+                    if predicted_idx < len(attr_values):
+                        predicted_attributes[attr_name] = attr_values[predicted_idx]
+                
+                batch_predictions.append(predicted_attributes)
+            
+            all_predictions.extend(batch_predictions)
+            
+            # Clear GPU cache periodically
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+    
+    return all_predictions
 
-    # Post-process outputs
-    generated_ids_trimmed = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
-    output_texts = processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
-
+def process_csv_file(input_csv_path, image_dir, model_path, output_csv_path, batch_size=32, device='cuda'):
+    # Load the input CSV
+    df = pd.read_csv(input_csv_path)
+    
+    # Validate required columns
+    required_columns = ['id', 'Category']
+    if not all(col in df.columns for col in required_columns):
+        raise ValueError(f"Input CSV must contain columns: {required_columns}")
+    
+    # Load models from checkpoint
+    model, clip_model, clip_preprocess, checkpoint = load_models(model_path, device)
+    
+    # Prepare image paths and categories
+    image_paths = [
+        os.path.join(image_dir, f"{str(id_).zfill(6)}.jpg") 
+        for id_ in df['id']
+        if os.path.exists(os.path.join(image_dir, f"{str(id_).zfill(6)}.jpg"))
+    ]
+    valid_indices = [
+        i for i, id_ in enumerate(df['id'])
+        if os.path.exists(os.path.join(image_dir, f"{str(id_).zfill(6)}.jpg"))
+    ]
+    categories = df['Category'].iloc[valid_indices].tolist()
+    
+    print(f"Processing {len(image_paths)} valid images out of {len(df)} total entries")
+    
+    # Get predictions in batches
+    predictions = predict_batch(
+        image_paths, 
+        categories, 
+        clip_model, 
+        model, 
+        checkpoint, 
+        clip_preprocess,
+        device=device,
+        batch_size=batch_size
+    )
+    
+    # Process results
     results = []
-    for idx, category, txt in zip(chunk["id"], chunk['Category'], output_texts):
-
-        predictions = txt.replace("'", "").split(",")
-
-        result = {'id': idx, 'Category': category, 'len': len(predictions)}
-
-        for i in range(10):
-            if i < len(predictions):
-                result[f'attr_{i+1}'] = predictions[i].strip()
-            else:
-                result[f'attr_{i+1}'] = "dummy"
+    pred_idx = 0
+    for idx, row in df.iterrows():
+        if idx in valid_indices:
+            pred = predictions[pred_idx]
+            pred_idx += 1
+        else:
+            pred = {}
+            
+        result = {
+            'id': row['id'],
+            'Category': row['Category'],
+            'len': len(pred)
+        }
+        
+        # Map the predictions to attr_1, attr_2, etc.
+        category_mapping = category_class_attribute_mapping[row['Category']]
+        
+        # Initialize all attribute columns with None
+        for i in range(1, 11):
+            result[f'attr_{i}'] = "dummy"
+            
+        # Fill in the predicted attributes according to the mapping
+        for attr_name, pred_value in pred.items():
+            if attr_name in category_mapping:
+                attr_column = category_mapping[attr_name]
+                result[attr_column] = pred_value
         
         results.append(result)
     
-    print(f"Results: {results}")
+    # Create output DataFrame
+    output_df = pd.DataFrame(results)
+    columns = ['id', 'Category', 'len'] + [f'attr_{i}' for i in range(1, 11)]
+    output_df = output_df[columns]
+    
+    # Save to CSV
+    output_df.to_csv(output_csv_path, index=False)
+    print(f"Results saved to {output_csv_path}")
 
-    # Clear CUDA cache
-    torch.cuda.empty_cache()
-
-    return results
-
-# Function to write results to file
-def write_to_file(results, output_file, fieldnames):
-    with open(output_file, 'a', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writerows(results)
-
-# Main processing loop
-for dataset, values in adapter_paths.items():
-    model_name = "Qwen/Qwen2-VL-7B-Instruct"
-    adapter_path = values['model']
-    csv_path = values['csv_path']
-
-    pred_dir = values['pred_dir']
-    os.makedirs(pred_dir, exist_ok=True)
-
-    # Load and configure model
-    print("Loading model...")
-    model = Qwen2VLForConditionalGeneration.from_pretrained(
-        model_name,
-        torch_dtype=torch.float16,
-        attn_implementation="flash_attention_2",
-        device_map="cuda",
-        cache_dir=FINETUNING_DIR
+def main():
+    # Configuration
+    input_csv_path = "/scratch/data/m23csa016/meesho_data/test.csv"
+    image_dir = "/scratch/data/m23csa016/meesho_data/test_images"
+    model_path = "/scratch/data/m23csa016/meesho_data/checkpoints/clipvit_large/clipvit_unfreeze_70k_16.pth"
+    output_csv_path = "cv_large_uf_70k_16.csv"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    batch_size = 128  # Adjust based on your GPU memory
+    
+    # Process the CSV file
+    process_csv_file(
+        input_csv_path=input_csv_path,
+        image_dir=image_dir,
+        model_path=model_path,
+        output_csv_path=output_csv_path,
+        batch_size=batch_size,
+        device=device
     )
 
-    # Load PEFT adapter
-    model = PeftModel.from_pretrained(model, adapter_path)
-    # Load processor
-    processor = AutoProcessor.from_pretrained(model_name, cache_dir=FINETUNING_DIR, max_pixels=MAX_PIXELS)
-
-    # Load CSV data
-    print(f"Loading data for {dataset}...")
-    df = pd.read_csv(csv_path)
-    print(f"Data loaded. Total rows: {len(df)}")
-
-    output_file = os.path.join(pred_dir, f"predicted_{dataset}.csv")
-    fieldnames = ['id', 'Category', 'len', 'attr_1', 'attr_2', 'attr_3', 'attr_4', 'attr_5', 'attr_6', 'attr_7', 'attr_8', 'attr_9', 'attr_10']
-
-    # Initialize CSV file with headers if it doesn't exist
-    if not os.path.exists(output_file):
-        with open(output_file, 'w', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()
-
-    # Set chunk size and buffer for results
-    chunk_size = 4  # Adjust based on GPU memory
-    results_buffer = []
-
-    # Process the CSV file in chunks sequentially
-    print("Starting sequential processing...")
-    for i in range(0, len(df), chunk_size):
-        chunk = df.iloc[i:i + chunk_size]
-        try:
-            chunk_results = process_chunk(chunk, model_name, adapter_path)
-            results_buffer.extend(chunk_results)
-            print(f"Total Processed: {i+1}")
-
-            # Write to file every 500 processed items
-            if len(results_buffer) >= 500:
-                write_to_file(results_buffer, output_file, fieldnames)
-                print(f"Wrote {len(results_buffer)} items to file.")
-                results_buffer = []
-
-        except Exception as e:
-            print(f"Error processing chunk: {e}")
-            continue
-
-    # Write any remaining results
-    if results_buffer:
-        write_to_file(results_buffer, output_file, fieldnames)
-        print(f"Wrote final {len(results_buffer)} items to file.")
-
-    print("Processing completed.")
+if __name__ == "__main__":
+    main()
