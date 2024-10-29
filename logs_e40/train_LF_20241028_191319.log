@@ -1,0 +1,896 @@
+2024-10-28 19:13:19,528 | INFO | Starting hyperparameter search
+2024-10-28 19:13:19,528 | INFO | Hyperparameter search space:
+2024-10-28 19:13:19,528 | INFO | {
+  "clip_lr": [
+    1e-05,
+    0.0001,
+    5e-06
+  ],
+  "predictor_lr": [
+    5e-05,
+    0.0005,
+    0.001
+  ],
+  "weight_decay": [
+    0.001,
+    0.05,
+    0.1
+  ],
+  "beta1": [
+    0.9,
+    0.95
+  ],
+  "beta2": [
+    0.999,
+    0.9999
+  ],
+  "hidden_dim": [
+    256,
+    768,
+    1024
+  ],
+  "dropout_rate": [
+    0.1,
+    0.3,
+    0.4,
+    0.5
+  ],
+  "num_hidden_layers": [
+    1,
+    2,
+    3
+  ]
+}
+2024-10-28 19:13:27,190 | INFO | Dataset loaded successfully with 70213 samples
+2024-10-28 19:13:27,193 | INFO | Dataset split: 63192 train, 7021 validation samples
+2024-10-28 19:13:27,194 | INFO | Attribute dimensions:
+2024-10-28 19:13:27,195 | INFO | {
+  "Kurtis_color": 13,
+  "Kurtis_fit_shape": 2,
+  "Kurtis_length": 2,
+  "Kurtis_occasion": 2,
+  "Kurtis_ornamentation": 2,
+  "Kurtis_pattern": 2,
+  "Kurtis_print_or_pattern_type": 2,
+  "Kurtis_sleeve_length": 3,
+  "Kurtis_sleeve_styling": 2,
+  "Men Tshirts_color": 4,
+  "Men Tshirts_neck": 2,
+  "Men Tshirts_pattern": 2,
+  "Men Tshirts_print_or_pattern_type": 3,
+  "Men Tshirts_sleeve_length": 2,
+  "Sarees_blouse_pattern": 4,
+  "Sarees_border": 6,
+  "Sarees_border_width": 3,
+  "Sarees_color": 8,
+  "Sarees_occasion": 4,
+  "Sarees_ornamentation": 3,
+  "Sarees_pallu_details": 4,
+  "Sarees_pattern": 5,
+  "Sarees_print_or_pattern_type": 9,
+  "Sarees_transparency": 2,
+  "Women Tops & Tunics_color": 12,
+  "Women Tops & Tunics_fit_shape": 4,
+  "Women Tops & Tunics_length": 2,
+  "Women Tops & Tunics_neck_collar": 7,
+  "Women Tops & Tunics_occasion": 2,
+  "Women Tops & Tunics_pattern": 3,
+  "Women Tops & Tunics_print_or_pattern_type": 6,
+  "Women Tops & Tunics_sleeve_length": 4,
+  "Women Tops & Tunics_sleeve_styling": 4,
+  "Women Tops & Tunics_surface_styling": 6,
+  "Women Tshirts_color": 7,
+  "Women Tshirts_fit_shape": 3,
+  "Women Tshirts_length": 3,
+  "Women Tshirts_pattern": 3,
+  "Women Tshirts_print_or_pattern_type": 6,
+  "Women Tshirts_sleeve_length": 3,
+  "Women Tshirts_sleeve_styling": 2,
+  "Women Tshirts_surface_styling": 2
+}
+2024-10-28 19:13:27,260 | INFO | 
+Initialized model with architecture parameters:
+2024-10-28 19:13:27,260 | INFO | Hidden Dim: 256, Dropout: 0.1, Layers: 1
+2024-10-28 19:13:27,260 | INFO | 
+Starting training with optimizer parameters:
+2024-10-28 19:13:27,260 | INFO | CLIP LR: 1e-05, Predictor LR: 5e-05, Weight Decay: 0.001, Beta1: 0.9, Beta2: 0.999
+2024-10-28 19:13:27,260 | INFO | Starting new training run with validation
+2024-10-28 19:13:27,261 | INFO | Training hyperparameters:
+2024-10-28 19:13:27,261 | INFO | {
+  "clip_lr": 1e-05,
+  "predictor_lr": 5e-05,
+  "weight_decay": 0.001,
+  "beta1": 0.9,
+  "beta2": 0.999,
+  "num_epochs": 40,
+  "patience": 10,
+  "device": "cuda",
+  "model_architecture": "CategoryAwareAttributePredictor(\n  (attribute_predictors): ModuleDict(\n    (Kurtis_color): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=13, bias=True)\n    )\n    (Kurtis_fit_shape): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Kurtis_length): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Kurtis_occasion): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Kurtis_ornamentation): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Kurtis_pattern): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Kurtis_print_or_pattern_type): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Kurtis_sleeve_length): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=3, bias=True)\n    )\n    (Kurtis_sleeve_styling): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Men Tshirts_color): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=4, bias=True)\n    )\n    (Men Tshirts_neck): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Men Tshirts_pattern): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Men Tshirts_print_or_pattern_type): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=3, bias=True)\n    )\n    (Men Tshirts_sleeve_length): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Sarees_blouse_pattern): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=4, bias=True)\n    )\n    (Sarees_border): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=6, bias=True)\n    )\n    (Sarees_border_width): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=3, bias=True)\n    )\n    (Sarees_color): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=8, bias=True)\n    )\n    (Sarees_occasion): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=4, bias=True)\n    )\n    (Sarees_ornamentation): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=3, bias=True)\n    )\n    (Sarees_pallu_details): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=4, bias=True)\n    )\n    (Sarees_pattern): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=5, bias=True)\n    )\n    (Sarees_print_or_pattern_type): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=9, bias=True)\n    )\n    (Sarees_transparency): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Women Tops & Tunics_color): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=12, bias=True)\n    )\n    (Women Tops & Tunics_fit_shape): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=4, bias=True)\n    )\n    (Women Tops & Tunics_length): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Women Tops & Tunics_neck_collar): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=7, bias=True)\n    )\n    (Women Tops & Tunics_occasion): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Women Tops & Tunics_pattern): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=3, bias=True)\n    )\n    (Women Tops & Tunics_print_or_pattern_type): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=6, bias=True)\n    )\n    (Women Tops & Tunics_sleeve_length): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=4, bias=True)\n    )\n    (Women Tops & Tunics_sleeve_styling): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=4, bias=True)\n    )\n    (Women Tops & Tunics_surface_styling): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=6, bias=True)\n    )\n    (Women Tshirts_color): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=7, bias=True)\n    )\n    (Women Tshirts_fit_shape): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=3, bias=True)\n    )\n    (Women Tshirts_length): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=3, bias=True)\n    )\n    (Women Tshirts_pattern): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=3, bias=True)\n    )\n    (Women Tshirts_print_or_pattern_type): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=6, bias=True)\n    )\n    (Women Tshirts_sleeve_length): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=3, bias=True)\n    )\n    (Women Tshirts_sleeve_styling): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n    (Women Tshirts_surface_styling): Sequential(\n      (0): Linear(in_features=768, out_features=256, bias=True)\n      (1): ReLU()\n      (2): Dropout(p=0.1, inplace=False)\n      (3): Linear(in_features=256, out_features=2, bias=True)\n    )\n  )\n)"
+}
+2024-10-28 19:13:34,626 | INFO | CLIP model loaded successfully
+2024-10-28 19:13:34,630 | INFO | Starting epoch 1/40
+2024-10-28 19:13:42,033 | INFO | Epoch 1, Batch 0: Loss = 1.3001, Accuracy = 31.7406%
+2024-10-28 19:14:24,311 | INFO | Epoch 1, Batch 100: Loss = 1.0478, Accuracy = 54.8276%
+2024-10-28 19:15:06,654 | INFO | Epoch 1, Batch 200: Loss = 0.9275, Accuracy = 62.7240%
+2024-10-28 19:15:49,248 | INFO | Epoch 1, Batch 300: Loss = 0.8958, Accuracy = 63.1757%
+2024-10-28 19:16:31,588 | INFO | Epoch 1, Batch 400: Loss = 0.8072, Accuracy = 65.0350%
+2024-10-28 19:17:13,223 | INFO | Epoch 1, Batch 500: Loss = 0.7777, Accuracy = 65.7143%
+2024-10-28 19:17:54,641 | INFO | Epoch 1, Batch 600: Loss = 0.6957, Accuracy = 72.5352%
+2024-10-28 19:18:36,487 | INFO | Epoch 1, Batch 700: Loss = 0.7088, Accuracy = 68.8581%
+2024-10-28 19:19:18,777 | INFO | Epoch 1, Batch 800: Loss = 0.7693, Accuracy = 67.0103%
+2024-10-28 19:20:00,570 | INFO | Epoch 1, Batch 900: Loss = 0.5438, Accuracy = 79.2727%
+2024-10-28 19:20:42,714 | INFO | Epoch 1, Batch 1000: Loss = 0.6801, Accuracy = 68.1818%
+2024-10-28 19:21:24,507 | INFO | Epoch 1, Batch 1100: Loss = 0.7674, Accuracy = 71.4777%
+2024-10-28 19:22:06,460 | INFO | Epoch 1, Batch 1200: Loss = 0.7669, Accuracy = 66.7857%
+2024-10-28 19:22:48,361 | INFO | Epoch 1, Batch 1300: Loss = 0.5991, Accuracy = 74.9104%
+2024-10-28 19:23:30,026 | INFO | Epoch 1, Batch 1400: Loss = 0.7142, Accuracy = 73.6264%
+2024-10-28 19:24:11,839 | INFO | Epoch 1, Batch 1500: Loss = 0.7731, Accuracy = 65.6357%
+2024-10-28 19:24:53,763 | INFO | Epoch 1, Batch 1600: Loss = 0.6207, Accuracy = 74.9164%
+2024-10-28 19:25:35,777 | INFO | Epoch 1, Batch 1700: Loss = 0.6382, Accuracy = 75.3676%
+2024-10-28 19:26:18,040 | INFO | Epoch 1, Batch 1800: Loss = 0.6942, Accuracy = 67.3684%
+2024-10-28 19:26:59,598 | INFO | Epoch 1, Batch 1900: Loss = 0.6015, Accuracy = 74.3772%
+2024-10-28 19:28:29,285 | INFO | Epoch 1 Results:
+Train Loss: 0.7262
+Train Acc: 70.1333%
+Attribute Training Accuracies: {
+  "Women Tops & Tunics_color": 0.5501837056044789,
+  "Women Tops & Tunics_fit_shape": 0.5521082405085438,
+  "Women Tops & Tunics_length": 0.7210590773896308,
+  "Women Tops & Tunics_neck_collar": 0.5699539278007815,
+  "Women Tops & Tunics_occasion": 0.678660990260687,
+  "Women Tops & Tunics_pattern": 0.6699131043331195,
+  "Women Tops & Tunics_print_or_pattern_type": 0.6031375750860208,
+  "Women Tops & Tunics_sleeve_length": 0.6436111273108999,
+  "Women Tops & Tunics_sleeve_styling": 0.6334052603954045,
+  "Women Tops & Tunics_surface_styling": 0.6559164868490115,
+  "Kurtis_color": 0.6334152334152334,
+  "Kurtis_fit_shape": 0.7100737100737101,
+  "Kurtis_length": 0.7698607698607699,
+  "Kurtis_occasion": 0.8943488943488943,
+  "Kurtis_ornamentation": 0.7248157248157249,
+  "Kurtis_pattern": 0.8530712530712531,
+  "Kurtis_print_or_pattern_type": 0.8515970515970516,
+  "Kurtis_sleeve_length": 0.8992628992628993,
+  "Kurtis_sleeve_styling": 0.9656019656019657,
+  "Sarees_blouse_pattern": 0.6563708897485493,
+  "Sarees_border": 0.628928916827853,
+  "Sarees_border_width": 0.7953941005802708,
+  "Sarees_color": 0.5163201160541586,
+  "Sarees_occasion": 0.6542553191489362,
+  "Sarees_ornamentation": 0.7500604448742747,
+  "Sarees_pallu_details": 0.5968931334622823,
+  "Sarees_pattern": 0.7529617988394585,
+  "Sarees_print_or_pattern_type": 0.4619801740812379,
+  "Sarees_transparency": 0.8059719535783365,
+  "Men Tshirts_color": 0.605239110569601,
+  "Men Tshirts_neck": 0.9593359731952482,
+  "Men Tshirts_pattern": 0.9369479134937557,
+  "Men Tshirts_print_or_pattern_type": 0.7595187328662808,
+  "Men Tshirts_sleeve_length": 0.8390191897654584,
+  "Women Tshirts_color": 0.6922756981580511,
+  "Women Tshirts_fit_shape": 0.6884135472370766,
+  "Women Tshirts_length": 0.7478312537136067,
+  "Women Tshirts_pattern": 0.8216874628639335,
+  "Women Tshirts_print_or_pattern_type": 0.6163992869875223,
+  "Women Tshirts_sleeve_length": 0.8007130124777183,
+  "Women Tshirts_sleeve_styling": 0.8177064765300059,
+  "Women Tshirts_surface_styling": 0.9717171717171718
+}Val Loss: 0.6323
+Val Acc: 73.8390%Attribute Validation Accuracies: {
+  "Sarees_blouse_pattern": 0.6781354051054383,
+  "Sarees_border": 0.667591564927858,
+  "Sarees_border_width": 0.8257491675915649,
+  "Sarees_color": 0.55826859045505,
+  "Sarees_occasion": 0.6925638179800222,
+  "Sarees_ornamentation": 0.7597114317425083,
+  "Sarees_pallu_details": 0.6237513873473918,
+  "Sarees_pattern": 0.767480577136515,
+  "Sarees_print_or_pattern_type": 0.5499445061043285,
+  "Sarees_transparency": 0.8213096559378469,
+  "Women Tshirts_color": 0.7659465020576132,
+  "Women Tshirts_fit_shape": 0.6970164609053497,
+  "Women Tshirts_length": 0.7710905349794238,
+  "Women Tshirts_pattern": 0.8374485596707819,
+  "Women Tshirts_print_or_pattern_type": 0.6954732510288066,
+  "Women Tshirts_sleeve_length": 0.8307613168724279,
+  "Women Tshirts_sleeve_styling": 0.8333333333333334,
+  "Women Tshirts_surface_styling": 0.9737654320987654,
+  "Men Tshirts_color": 0.6604850213980028,
+  "Men Tshirts_neck": 0.9714693295292439,
+  "Men Tshirts_pattern": 0.9529243937232525,
+  "Men Tshirts_print_or_pattern_type": 0.8059914407988588,
+  "Men Tshirts_sleeve_length": 0.8516405135520685,
+  "Women Tops & Tunics_color": 0.6295099623047927,
+  "Women Tops & Tunics_fit_shape": 0.5982767905223478,
+  "Women Tops & Tunics_length": 0.7506731287022078,
+  "Women Tops & Tunics_neck_collar": 0.6203554119547657,
+  "Women Tops & Tunics_occasion": 0.7011308562197092,
+  "Women Tops & Tunics_pattern": 0.6978998384491115,
+  "Women Tops & Tunics_print_or_pattern_type": 0.6666666666666666,
+  "Women Tops & Tunics_sleeve_length": 0.708131394722671,
+  "Women Tops & Tunics_sleeve_styling": 0.6768982229402262,
+  "Women Tops & Tunics_surface_styling": 0.6569736133548735,
+  "Kurtis_color": 0.7740585774058577,
+  "Kurtis_fit_shape": 0.7350069735006973,
+  "Kurtis_length": 0.7726638772663877,
+  "Kurtis_occasion": 0.891213389121339,
+  "Kurtis_ornamentation": 0.7824267782426778,
+  "Kurtis_pattern": 0.8702928870292888,
+  "Kurtis_print_or_pattern_type": 0.8730822873082287,
+  "Kurtis_sleeve_length": 0.9442119944211994,
+  "Kurtis_sleeve_styling": 0.9735006973500697
+}
+2024-10-28 19:28:32,164 | INFO | Starting epoch 2/40
+2024-10-28 19:28:36,296 | INFO | Epoch 2, Batch 0: Loss = 0.6097, Accuracy = 77.0318%
+2024-10-28 19:29:19,182 | INFO | Epoch 2, Batch 100: Loss = 0.5697, Accuracy = 78.8679%
+2024-10-28 19:30:00,929 | INFO | Epoch 2, Batch 200: Loss = 0.7553, Accuracy = 66.9014%
+2024-10-28 19:30:42,843 | INFO | Epoch 2, Batch 300: Loss = 0.7045, Accuracy = 69.2833%
+2024-10-28 19:31:24,715 | INFO | Epoch 2, Batch 400: Loss = 0.6774, Accuracy = 72.5979%
+2024-10-28 19:32:06,559 | INFO | Epoch 2, Batch 500: Loss = 0.5488, Accuracy = 78.2918%
+2024-10-28 19:32:48,633 | INFO | Epoch 2, Batch 600: Loss = 0.5827, Accuracy = 75.2650%
+2024-10-28 19:33:31,721 | INFO | Epoch 2, Batch 700: Loss = 0.5705, Accuracy = 77.0318%
+2024-10-28 19:34:13,779 | INFO | Epoch 2, Batch 800: Loss = 0.4668, Accuracy = 80.6691%
+2024-10-28 19:34:55,884 | INFO | Epoch 2, Batch 900: Loss = 0.6252, Accuracy = 75.7895%
+2024-10-28 19:35:37,645 | INFO | Epoch 2, Batch 1000: Loss = 0.5695, Accuracy = 72.9730%
+2024-10-28 19:36:19,665 | INFO | Epoch 2, Batch 1100: Loss = 0.4202, Accuracy = 84.0149%
+2024-10-28 19:37:01,176 | INFO | Epoch 2, Batch 1200: Loss = 0.7373, Accuracy = 65.3846%
+2024-10-28 19:37:43,386 | INFO | Epoch 2, Batch 1300: Loss = 0.7467, Accuracy = 66.8919%
+2024-10-28 19:38:25,737 | INFO | Epoch 2, Batch 1400: Loss = 0.4623, Accuracy = 80.8271%
+2024-10-28 19:39:07,590 | INFO | Epoch 2, Batch 1500: Loss = 0.5847, Accuracy = 75.5172%
+2024-10-28 19:39:49,148 | INFO | Epoch 2, Batch 1600: Loss = 0.6785, Accuracy = 69.8305%
+2024-10-28 19:40:30,882 | INFO | Epoch 2, Batch 1700: Loss = 0.6701, Accuracy = 72.6937%
+2024-10-28 19:41:12,804 | INFO | Epoch 2, Batch 1800: Loss = 0.6047, Accuracy = 76.5957%
+2024-10-28 19:41:54,823 | INFO | Epoch 2, Batch 1900: Loss = 0.6011, Accuracy = 75.1724%
+2024-10-28 19:43:25,822 | INFO | Epoch 2 Results:
+Train Loss: 0.6161
+Train Acc: 74.2815%
+Attribute Training Accuracies: {
+  "Women Tops & Tunics_color": 0.6524173324779845,
+  "Women Tops & Tunics_fit_shape": 0.6331719834373359,
+  "Women Tops & Tunics_length": 0.7653233801831224,
+  "Women Tops & Tunics_neck_collar": 0.6534670787892926,
+  "Women Tops & Tunics_occasion": 0.7151105149588849,
+  "Women Tops & Tunics_pattern": 0.7225753776170759,
+  "Women Tops & Tunics_print_or_pattern_type": 0.6732373009855952,
+  "Women Tops & Tunics_sleeve_length": 0.7179098384557066,
+  "Women Tops & Tunics_sleeve_styling": 0.6966816352714761,
+  "Women Tops & Tunics_surface_styling": 0.6812853560389572,
+  "Men Tshirts_color": 0.6605239110569601,
+  "Men Tshirts_neck": 0.965732561681389,
+  "Men Tshirts_pattern": 0.9441060006091989,
+  "Men Tshirts_print_or_pattern_type": 0.802771855010661,
+  "Men Tshirts_sleeve_length": 0.8473956746877855,
+  "Kurtis_color": 0.7904995904995905,
+  "Kurtis_fit_shape": 0.7297297297297297,
+  "Kurtis_length": 0.8049140049140049,
+  "Kurtis_occasion": 0.9090909090909091,
+  "Kurtis_ornamentation": 0.7696969696969697,
+  "Kurtis_pattern": 0.8819000819000818,
+  "Kurtis_print_or_pattern_type": 0.8799344799344799,
+  "Kurtis_sleeve_length": 0.942014742014742,
+  "Kurtis_sleeve_styling": 0.9767403767403767,
+  "Women Tshirts_color": 0.784194890077243,
+  "Women Tshirts_fit_shape": 0.7133689839572193,
+  "Women Tshirts_length": 0.785086155674391,
+  "Women Tshirts_pattern": 0.8423054070112893,
+  "Women Tshirts_print_or_pattern_type": 0.6964349376114082,
+  "Women Tshirts_sleeve_length": 0.8256090314913844,
+  "Women Tshirts_sleeve_styling": 0.8339275103980986,
+  "Women Tshirts_surface_styling": 0.9743315508021391,
+  "Sarees_blouse_pattern": 0.6691247582205029,
+  "Sarees_border": 0.6668882978723404,
+  "Sarees_border_width": 0.8221107350096711,
+  "Sarees_color": 0.5399540618955513,
+  "Sarees_occasion": 0.6771034816247582,
+  "Sarees_ornamentation": 0.7529617988394585,
+  "Sarees_pallu_details": 0.6159332688588007,
+  "Sarees_pattern": 0.773392166344294,
+  "Sarees_print_or_pattern_type": 0.5459381044487428,
+  "Sarees_transparency": 0.8092359767891683
+}Val Loss: 0.6020
+Val Acc: 74.7053%Attribute Validation Accuracies: {
+  "Sarees_blouse_pattern": 0.6842397336293008,
+  "Sarees_border": 0.6703662597114317,
+  "Sarees_border_width": 0.8263041065482797,
+  "Sarees_color": 0.5527192008879024,
+  "Sarees_occasion": 0.6892341842397336,
+  "Sarees_ornamentation": 0.7586015538290788,
+  "Sarees_pallu_details": 0.6226415094339622,
+  "Sarees_pattern": 0.7691453940066593,
+  "Sarees_print_or_pattern_type": 0.5493895671476138,
+  "Sarees_transparency": 0.827968923418424,
+  "Women Tshirts_color": 0.7844650205761317,
+  "Women Tshirts_fit_shape": 0.7093621399176955,
+  "Women Tshirts_length": 0.7808641975308642,
+  "Women Tshirts_pattern": 0.8415637860082305,
+  "Women Tshirts_print_or_pattern_type": 0.7042181069958847,
+  "Women Tshirts_sleeve_length": 0.8359053497942387,
+  "Women Tshirts_sleeve_styling": 0.8431069958847737,
+  "Women Tshirts_surface_styling": 0.9711934156378601,
+  "Men Tshirts_color": 0.6733238231098431,
+  "Men Tshirts_neck": 0.9728958630527818,
+  "Men Tshirts_pattern": 0.9514978601997147,
+  "Men Tshirts_print_or_pattern_type": 0.8017118402282454,
+  "Men Tshirts_sleeve_length": 0.854493580599144,
+  "Women Tops & Tunics_color": 0.6386645126548196,
+  "Women Tops & Tunics_fit_shape": 0.6214324178782983,
+  "Women Tops & Tunics_length": 0.7722132471728594,
+  "Women Tops & Tunics_neck_collar": 0.674744211093161,
+  "Women Tops & Tunics_occasion": 0.7092084006462036,
+  "Women Tops & Tunics_pattern": 0.7280560043080236,
+  "Women Tops & Tunics_print_or_pattern_type": 0.6532040926225094,
+  "Women Tops & Tunics_sleeve_length": 0.7226709746903608,
+  "Women Tops & Tunics_sleeve_styling": 0.7022078621432418,
+  "Women Tops & Tunics_surface_styling": 0.6806677436725902,
+  "Kurtis_color": 0.8075313807531381,
+  "Kurtis_fit_shape": 0.7503486750348675,
+  "Kurtis_length": 0.7754532775453278,
+  "Kurtis_occasion": 0.8967921896792189,
+  "Kurtis_ornamentation": 0.7266387726638772,
+  "Kurtis_pattern": 0.8884239888423989,
+  "Kurtis_print_or_pattern_type": 0.8898186889818689,
+  "Kurtis_sleeve_length": 0.9442119944211994,
+  "Kurtis_sleeve_styling": 0.9735006973500697
+}
+2024-10-28 19:43:28,429 | INFO | Starting epoch 3/40
+2024-10-28 19:43:32,773 | INFO | Epoch 3, Batch 0: Loss = 0.6803, Accuracy = 75.0877%
+2024-10-28 19:44:14,991 | INFO | Epoch 3, Batch 100: Loss = 0.6387, Accuracy = 72.5352%
+2024-10-28 19:44:56,913 | INFO | Epoch 3, Batch 200: Loss = 0.5451, Accuracy = 76.8421%
+2024-10-28 19:45:38,039 | INFO | Epoch 3, Batch 300: Loss = 0.5990, Accuracy = 74.5704%
+2024-10-28 19:46:19,122 | INFO | Epoch 3, Batch 400: Loss = 0.6760, Accuracy = 70.8904%
+2024-10-28 19:47:01,127 | INFO | Epoch 3, Batch 500: Loss = 0.5252, Accuracy = 78.5965%
+2024-10-28 19:47:42,993 | INFO | Epoch 3, Batch 600: Loss = 0.5964, Accuracy = 73.6655%
+2024-10-28 19:48:24,962 | INFO | Epoch 3, Batch 700: Loss = 0.5625, Accuracy = 73.7226%
+2024-10-28 19:49:06,994 | INFO | Epoch 3, Batch 800: Loss = 0.5550, Accuracy = 76.3251%
+2024-10-28 19:49:48,961 | INFO | Epoch 3, Batch 900: Loss = 0.5260, Accuracy = 80.0000%
+2024-10-28 19:50:30,739 | INFO | Epoch 3, Batch 1000: Loss = 0.5521, Accuracy = 75.6014%
+2024-10-28 19:51:12,875 | INFO | Epoch 3, Batch 1100: Loss = 0.5506, Accuracy = 76.4310%
+2024-10-28 19:51:54,043 | INFO | Epoch 3, Batch 1200: Loss = 0.6356, Accuracy = 74.7331%
+2024-10-28 19:52:35,525 | INFO | Epoch 3, Batch 1300: Loss = 0.4931, Accuracy = 81.8182%
+2024-10-28 19:53:17,268 | INFO | Epoch 3, Batch 1400: Loss = 0.5717, Accuracy = 73.8182%
+2024-10-28 19:53:59,218 | INFO | Epoch 3, Batch 1500: Loss = 0.5901, Accuracy = 73.0375%
+2024-10-28 19:54:40,810 | INFO | Epoch 3, Batch 1600: Loss = 0.5493, Accuracy = 78.1362%
+2024-10-28 19:55:22,518 | INFO | Epoch 3, Batch 1700: Loss = 0.6837, Accuracy = 71.4286%
+2024-10-28 19:56:04,431 | INFO | Epoch 3, Batch 1800: Loss = 0.5838, Accuracy = 74.9091%
+2024-10-28 19:56:46,222 | INFO | Epoch 3, Batch 1900: Loss = 0.5507, Accuracy = 75.6184%
+2024-10-28 19:58:15,255 | INFO | Epoch 3 Results:
+Train Loss: 0.5822
+Train Acc: 75.5293%
+Attribute Training Accuracies: {
+  "Women Tshirts_color": 0.7995246583481878,
+  "Women Tshirts_fit_shape": 0.741473559120618,
+  "Women Tshirts_length": 0.7985739750445633,
+  "Women Tshirts_pattern": 0.8496732026143791,
+  "Women Tshirts_print_or_pattern_type": 0.7195484254307783,
+  "Women Tshirts_sleeve_length": 0.8320855614973262,
+  "Women Tshirts_sleeve_styling": 0.8430778371954842,
+  "Women Tshirts_surface_styling": 0.9746880570409983,
+  "Sarees_blouse_pattern": 0.6732954545454546,
+  "Sarees_border": 0.6694874274661509,
+  "Sarees_border_width": 0.8300894584139265,
+  "Sarees_color": 0.5451523210831721,
+  "Sarees_occasion": 0.688044003868472,
+  "Sarees_ornamentation": 0.7541706963249516,
+  "Sarees_pallu_details": 0.6196808510638298,
+  "Sarees_pattern": 0.7750241779497099,
+  "Sarees_print_or_pattern_type": 0.5536750483558994,
+  "Sarees_transparency": 0.8097799806576402,
+  "Men Tshirts_color": 0.6736216874809625,
+  "Men Tshirts_neck": 0.9649710630520865,
+  "Men Tshirts_pattern": 0.9485226926591532,
+  "Men Tshirts_print_or_pattern_type": 0.8067316478830339,
+  "Men Tshirts_sleeve_length": 0.848461772768809,
+  "Women Tops & Tunics_color": 0.6724208316323556,
+  "Women Tops & Tunics_fit_shape": 0.6647226920160961,
+  "Women Tops & Tunics_length": 0.7825275558406718,
+  "Women Tops & Tunics_neck_collar": 0.6843762757333645,
+  "Women Tops & Tunics_occasion": 0.7376800606520091,
+  "Women Tops & Tunics_pattern": 0.7383215722866974,
+  "Women Tops & Tunics_print_or_pattern_type": 0.6946987811278941,
+  "Women Tops & Tunics_sleeve_length": 0.7352306525922901,
+  "Women Tops & Tunics_sleeve_styling": 0.7148772380008165,
+  "Women Tops & Tunics_surface_styling": 0.6977897008223013,
+  "Kurtis_color": 0.8091728091728092,
+  "Kurtis_fit_shape": 0.7475839475839476,
+  "Kurtis_length": 0.8198198198198198,
+  "Kurtis_occasion": 0.9151515151515152,
+  "Kurtis_ornamentation": 0.7846027846027847,
+  "Kurtis_pattern": 0.8982800982800982,
+  "Kurtis_print_or_pattern_type": 0.8964782964782965,
+  "Kurtis_sleeve_length": 0.95004095004095,
+  "Kurtis_sleeve_styling": 0.9801801801801802
+}Val Loss: 0.5886
+Val Acc: 75.0934%Attribute Validation Accuracies: {
+  "Sarees_blouse_pattern": 0.6725860155382908,
+  "Sarees_border": 0.6798002219755827,
+  "Sarees_border_width": 0.8235294117647058,
+  "Sarees_color": 0.5588235294117647,
+  "Sarees_occasion": 0.6992230854605993,
+  "Sarees_ornamentation": 0.7647058823529411,
+  "Sarees_pallu_details": 0.6248612652608213,
+  "Sarees_pattern": 0.767480577136515,
+  "Sarees_print_or_pattern_type": 0.5510543840177581,
+  "Sarees_transparency": 0.8218645948945617,
+  "Women Tshirts_color": 0.779835390946502,
+  "Women Tshirts_fit_shape": 0.7237654320987654,
+  "Women Tshirts_length": 0.7942386831275721,
+  "Women Tshirts_pattern": 0.8492798353909465,
+  "Women Tshirts_print_or_pattern_type": 0.7191358024691358,
+  "Women Tshirts_sleeve_length": 0.8338477366255144,
+  "Women Tshirts_sleeve_styling": 0.8389917695473251,
+  "Women Tshirts_surface_styling": 0.9727366255144033,
+  "Men Tshirts_color": 0.6590584878744651,
+  "Men Tshirts_neck": 0.9714693295292439,
+  "Men Tshirts_pattern": 0.948644793152639,
+  "Men Tshirts_print_or_pattern_type": 0.8159771754636234,
+  "Men Tshirts_sleeve_length": 0.833095577746077,
+  "Women Tops & Tunics_color": 0.6564351103931072,
+  "Women Tops & Tunics_fit_shape": 0.6295099623047927,
+  "Women Tops & Tunics_length": 0.7474421109316102,
+  "Women Tops & Tunics_neck_collar": 0.678513731825525,
+  "Women Tops & Tunics_occasion": 0.7108239095315024,
+  "Women Tops & Tunics_pattern": 0.724824986537426,
+  "Women Tops & Tunics_print_or_pattern_type": 0.6725901992460959,
+  "Women Tops & Tunics_sleeve_length": 0.7151319332256327,
+  "Women Tops & Tunics_sleeve_styling": 0.7086698976844372,
+  "Women Tops & Tunics_surface_styling": 0.6898222940226171,
+  "Kurtis_color": 0.8228730822873083,
+  "Kurtis_fit_shape": 0.7503486750348675,
+  "Kurtis_length": 0.7921896792189679,
+  "Kurtis_occasion": 0.9079497907949791,
+  "Kurtis_ornamentation": 0.799163179916318,
+  "Kurtis_pattern": 0.8898186889818689,
+  "Kurtis_print_or_pattern_type": 0.8967921896792189,
+  "Kurtis_sleeve_length": 0.9553695955369595,
+  "Kurtis_sleeve_styling": 0.9748953974895398
+}
+2024-10-28 19:58:17,841 | INFO | Starting epoch 4/40
+2024-10-28 19:58:22,203 | INFO | Epoch 4, Batch 0: Loss = 0.5383, Accuracy = 79.7153%
+2024-10-28 19:59:04,294 | INFO | Epoch 4, Batch 100: Loss = 0.4263, Accuracy = 83.2143%
+2024-10-28 19:59:46,264 | INFO | Epoch 4, Batch 200: Loss = 0.7032, Accuracy = 67.6976%
+2024-10-28 20:00:28,142 | INFO | Epoch 4, Batch 300: Loss = 0.5939, Accuracy = 74.9129%
+2024-10-28 20:01:12,921 | INFO | Epoch 4, Batch 400: Loss = 0.5047, Accuracy = 79.2593%
+2024-10-28 20:02:00,012 | INFO | Epoch 4, Batch 500: Loss = 0.5205, Accuracy = 79.0941%
+2024-10-28 20:02:48,989 | INFO | Epoch 4, Batch 600: Loss = 0.6742, Accuracy = 74.7475%
+2024-10-28 20:03:36,479 | INFO | Epoch 4, Batch 700: Loss = 0.5566, Accuracy = 75.4513%
+2024-10-28 20:04:22,541 | INFO | Epoch 4, Batch 800: Loss = 0.5558, Accuracy = 79.7153%
+2024-10-28 20:05:08,013 | INFO | Epoch 4, Batch 900: Loss = 0.6014, Accuracy = 70.3072%
+2024-10-28 20:05:53,417 | INFO | Epoch 4, Batch 1000: Loss = 0.4550, Accuracy = 83.5821%
+2024-10-28 20:06:38,728 | INFO | Epoch 4, Batch 1100: Loss = 0.5763, Accuracy = 75.1773%
+2024-10-28 20:07:25,758 | INFO | Epoch 4, Batch 1200: Loss = 0.4516, Accuracy = 83.0935%
+2024-10-28 20:08:11,388 | INFO | Epoch 4, Batch 1300: Loss = 0.6341, Accuracy = 73.4266%
+2024-10-28 20:08:56,604 | INFO | Epoch 4, Batch 1400: Loss = 0.5658, Accuracy = 76.3066%
+2024-10-28 20:09:40,859 | INFO | Epoch 4, Batch 1500: Loss = 0.5327, Accuracy = 80.2326%
+2024-10-28 20:10:25,775 | INFO | Epoch 4, Batch 1600: Loss = 0.5365, Accuracy = 78.0220%
+2024-10-28 20:11:10,859 | INFO | Epoch 4, Batch 1700: Loss = 0.4699, Accuracy = 80.3030%
+2024-10-28 20:11:55,959 | INFO | Epoch 4, Batch 1800: Loss = 0.5546, Accuracy = 74.8227%
+2024-10-28 20:12:40,783 | INFO | Epoch 4, Batch 1900: Loss = 0.7208, Accuracy = 69.6113%
+2024-10-28 20:14:19,075 | INFO | Epoch 4 Results:
+Train Loss: 0.5596
+Train Acc: 76.3672%
+Attribute Training Accuracies: {
+  "Sarees_blouse_pattern": 0.6780101547388782,
+  "Sarees_border": 0.6794003868471954,
+  "Sarees_border_width": 0.8307543520309478,
+  "Sarees_color": 0.5489603481624759,
+  "Sarees_occasion": 0.6911871373307543,
+  "Sarees_ornamentation": 0.7595502901353965,
+  "Sarees_pallu_details": 0.6217359767891683,
+  "Sarees_pattern": 0.7779859767891683,
+  "Sarees_print_or_pattern_type": 0.5582688588007737,
+  "Sarees_transparency": 0.8116537717601547,
+  "Women Tops & Tunics_color": 0.6956318889601679,
+  "Women Tops & Tunics_fit_shape": 0.6805855251647519,
+  "Women Tops & Tunics_length": 0.7895258645827259,
+  "Women Tops & Tunics_neck_collar": 0.7037965824925643,
+  "Women Tops & Tunics_occasion": 0.7434536653642037,
+  "Women Tops & Tunics_pattern": 0.7520265935732198,
+  "Women Tops & Tunics_print_or_pattern_type": 0.7085787601329678,
+  "Women Tops & Tunics_sleeve_length": 0.7456697964658541,
+  "Women Tops & Tunics_sleeve_styling": 0.7322563713769172,
+  "Women Tops & Tunics_surface_styling": 0.7137108532104741,
+  "Women Tshirts_color": 0.8043374925727866,
+  "Women Tshirts_fit_shape": 0.7481283422459893,
+  "Women Tshirts_length": 0.8063576945929887,
+  "Women Tshirts_pattern": 0.8576945929887106,
+  "Women Tshirts_print_or_pattern_type": 0.7353535353535353,
+  "Women Tshirts_sleeve_length": 0.8399286987522282,
+  "Women Tshirts_sleeve_styling": 0.8513368983957219,
+  "Women Tshirts_surface_styling": 0.9754010695187165,
+  "Men Tshirts_color": 0.6876332622601279,
+  "Men Tshirts_neck": 0.9658848614072495,
+  "Men Tshirts_pattern": 0.9480657934815717,
+  "Men Tshirts_print_or_pattern_type": 0.8189156259518733,
+  "Men Tshirts_sleeve_length": 0.8548583612549497,
+  "Kurtis_color": 0.8230958230958231,
+  "Kurtis_fit_shape": 0.7551187551187551,
+  "Kurtis_length": 0.826044226044226,
+  "Kurtis_occasion": 0.9190827190827191,
+  "Kurtis_ornamentation": 0.7921375921375922,
+  "Kurtis_pattern": 0.906961506961507,
+  "Kurtis_print_or_pattern_type": 0.9048321048321049,
+  "Kurtis_sleeve_length": 0.9534807534807535,
+  "Kurtis_sleeve_styling": 0.9811629811629812
+}Val Loss: 0.5746
+Val Acc: 75.6699%Attribute Validation Accuracies: {
+  "Sarees_blouse_pattern": 0.6820199778024417,
+  "Sarees_border": 0.6809100998890122,
+  "Sarees_border_width": 0.8213096559378469,
+  "Sarees_color": 0.562708102108768,
+  "Sarees_occasion": 0.697558268590455,
+  "Sarees_ornamentation": 0.7624861265260822,
+  "Sarees_pallu_details": 0.6254162042175361,
+  "Sarees_pattern": 0.7669256381798002,
+  "Sarees_print_or_pattern_type": 0.5621531631520533,
+  "Sarees_transparency": 0.8257491675915649,
+  "Women Tshirts_color": 0.7880658436213992,
+  "Women Tshirts_fit_shape": 0.7407407407407407,
+  "Women Tshirts_length": 0.8050411522633745,
+  "Women Tshirts_pattern": 0.8492798353909465,
+  "Women Tshirts_print_or_pattern_type": 0.727366255144033,
+  "Women Tshirts_sleeve_length": 0.8364197530864198,
+  "Women Tshirts_sleeve_styling": 0.8472222222222222,
+  "Women Tshirts_surface_styling": 0.9727366255144033,
+  "Men Tshirts_color": 0.6733238231098431,
+  "Men Tshirts_neck": 0.9757489300998573,
+  "Men Tshirts_pattern": 0.9543509272467903,
+  "Men Tshirts_print_or_pattern_type": 0.8131241084165478,
+  "Men Tshirts_sleeve_length": 0.8402282453637661,
+  "Women Tops & Tunics_color": 0.6537425955842757,
+  "Women Tops & Tunics_fit_shape": 0.6365105008077544,
+  "Women Tops & Tunics_length": 0.7792137856758212,
+  "Women Tops & Tunics_neck_collar": 0.6887452880990845,
+  "Women Tops & Tunics_occasion": 0.7275175013462574,
+  "Women Tops & Tunics_pattern": 0.7291330102315563,
+  "Women Tops & Tunics_print_or_pattern_type": 0.6806677436725902,
+  "Women Tops & Tunics_sleeve_length": 0.7345180398492192,
+  "Women Tops & Tunics_sleeve_styling": 0.7102854065697362,
+  "Women Tops & Tunics_surface_styling": 0.6795907377490576,
+  "Kurtis_color": 0.8354253835425384,
+  "Kurtis_fit_shape": 0.7517433751743375,
+  "Kurtis_length": 0.803347280334728,
+  "Kurtis_occasion": 0.9121338912133892,
+  "Kurtis_ornamentation": 0.7949790794979079,
+  "Kurtis_pattern": 0.8940027894002789,
+  "Kurtis_print_or_pattern_type": 0.9037656903765691,
+  "Kurtis_sleeve_length": 0.9567642956764296,
+  "Kurtis_sleeve_styling": 0.9776847977684798
+}
+2024-10-28 20:14:21,967 | INFO | Starting epoch 5/40
+2024-10-28 20:14:26,488 | INFO | Epoch 5, Batch 0: Loss = 0.5300, Accuracy = 77.7778%
+2024-10-28 20:15:10,338 | INFO | Epoch 5, Batch 100: Loss = 0.6105, Accuracy = 69.2580%
+2024-10-28 20:15:54,304 | INFO | Epoch 5, Batch 200: Loss = 0.5470, Accuracy = 77.0609%
+2024-10-28 20:16:38,263 | INFO | Epoch 5, Batch 300: Loss = 0.5848, Accuracy = 75.2508%
+2024-10-28 20:17:22,557 | INFO | Epoch 5, Batch 400: Loss = 0.6019, Accuracy = 71.8644%
+2024-10-28 20:18:06,917 | INFO | Epoch 5, Batch 500: Loss = 0.6029, Accuracy = 74.8299%
+2024-10-28 20:18:51,104 | INFO | Epoch 5, Batch 600: Loss = 0.5499, Accuracy = 75.9717%
+2024-10-28 20:19:35,435 | INFO | Epoch 5, Batch 700: Loss = 0.5558, Accuracy = 76.1092%
+2024-10-28 20:20:20,305 | INFO | Epoch 5, Batch 800: Loss = 0.5228, Accuracy = 77.8182%
+2024-10-28 20:21:05,347 | INFO | Epoch 5, Batch 900: Loss = 0.6392, Accuracy = 73.9865%
+2024-10-28 20:21:49,249 | INFO | Epoch 5, Batch 1000: Loss = 0.5467, Accuracy = 76.5517%
+2024-10-28 20:22:34,063 | INFO | Epoch 5, Batch 1100: Loss = 0.5111, Accuracy = 78.7234%
+2024-10-28 20:23:19,992 | INFO | Epoch 5, Batch 1200: Loss = 0.4806, Accuracy = 79.7048%
+2024-10-28 20:24:06,181 | INFO | Epoch 5, Batch 1300: Loss = 0.6194, Accuracy = 72.4490%
+2024-10-28 20:24:51,578 | INFO | Epoch 5, Batch 1400: Loss = 0.5072, Accuracy = 78.9091%
+2024-10-28 20:25:37,250 | INFO | Epoch 5, Batch 1500: Loss = 0.5462, Accuracy = 77.3973%
+2024-10-28 20:26:23,081 | INFO | Epoch 5, Batch 1600: Loss = 0.5524, Accuracy = 76.8421%
+2024-10-28 20:27:07,584 | INFO | Epoch 5, Batch 1700: Loss = 0.4454, Accuracy = 81.7544%
+2024-10-28 20:27:52,031 | INFO | Epoch 5, Batch 1800: Loss = 0.4928, Accuracy = 78.8889%
+2024-10-28 20:28:36,496 | INFO | Epoch 5, Batch 1900: Loss = 0.4099, Accuracy = 81.8182%
+2024-10-28 20:30:14,214 | INFO | Epoch 5 Results:
+Train Loss: 0.5424
+Train Acc: 76.9876%
+Attribute Training Accuracies: {
+  "Women Tshirts_color": 0.8112893642305407,
+  "Women Tshirts_fit_shape": 0.7644087938205585,
+  "Women Tshirts_length": 0.8163398692810457,
+  "Women Tshirts_pattern": 0.8619132501485443,
+  "Women Tshirts_print_or_pattern_type": 0.7428995840760547,
+  "Women Tshirts_sleeve_length": 0.8452168746286394,
+  "Women Tshirts_sleeve_styling": 0.8589423648247178,
+  "Women Tshirts_surface_styling": 0.9757575757575757,
+  "Women Tops & Tunics_color": 0.7075290138216598,
+  "Women Tops & Tunics_fit_shape": 0.69417390797224,
+  "Women Tops & Tunics_length": 0.7995567737796699,
+  "Women Tops & Tunics_neck_collar": 0.7136525339709571,
+  "Women Tops & Tunics_occasion": 0.7547092785910072,
+  "Women Tops & Tunics_pattern": 0.7591998600338251,
+  "Women Tops & Tunics_print_or_pattern_type": 0.7150521957193678,
+  "Women Tops & Tunics_sleeve_length": 0.7548842363095585,
+  "Women Tops & Tunics_sleeve_styling": 0.7398961917536595,
+  "Women Tops & Tunics_surface_styling": 0.7242083163235551,
+  "Sarees_blouse_pattern": 0.6782519342359767,
+  "Sarees_border": 0.6775870406189555,
+  "Sarees_border_width": 0.8340788201160542,
+  "Sarees_color": 0.5518012572533849,
+  "Sarees_occasion": 0.6969294003868471,
+  "Sarees_ornamentation": 0.7600338491295938,
+  "Sarees_pallu_details": 0.6268133462282398,
+  "Sarees_pattern": 0.78034332688588,
+  "Sarees_print_or_pattern_type": 0.5678795938104448,
+  "Sarees_transparency": 0.8120768858800773,
+  "Men Tshirts_color": 0.696618946085897,
+  "Men Tshirts_neck": 0.9675601583917149,
+  "Men Tshirts_pattern": 0.9511117879987816,
+  "Men Tshirts_print_or_pattern_type": 0.8186110265001523,
+  "Men Tshirts_sleeve_length": 0.8571428571428571,
+  "Kurtis_color": 0.8321048321048321,
+  "Kurtis_fit_shape": 0.7652743652743653,
+  "Kurtis_length": 0.8327600327600327,
+  "Kurtis_occasion": 0.923996723996724,
+  "Kurtis_ornamentation": 0.7918099918099918,
+  "Kurtis_pattern": 0.9104013104013104,
+  "Kurtis_print_or_pattern_type": 0.9097461097461097,
+  "Kurtis_sleeve_length": 0.9538083538083538,
+  "Kurtis_sleeve_styling": 0.9821457821457822
+}Val Loss: 0.5670
+Val Acc: 75.9211%Attribute Validation Accuracies: {
+  "Sarees_blouse_pattern": 0.6809100998890122,
+  "Sarees_border": 0.6775804661487237,
+  "Sarees_border_width": 0.8229744728079911,
+  "Sarees_color": 0.5677025527192009,
+  "Sarees_occasion": 0.7053274139844617,
+  "Sarees_ornamentation": 0.7713651498335183,
+  "Sarees_pallu_details": 0.6270810210876804,
+  "Sarees_pattern": 0.767480577136515,
+  "Sarees_print_or_pattern_type": 0.5588235294117647,
+  "Sarees_transparency": 0.8257491675915649,
+  "Women Tshirts_color": 0.7870370370370371,
+  "Women Tshirts_fit_shape": 0.7309670781893004,
+  "Women Tshirts_length": 0.7973251028806584,
+  "Women Tshirts_pattern": 0.8513374485596708,
+  "Women Tshirts_print_or_pattern_type": 0.727366255144033,
+  "Women Tshirts_sleeve_length": 0.838477366255144,
+  "Women Tshirts_sleeve_styling": 0.8508230452674898,
+  "Women Tshirts_surface_styling": 0.9737654320987654,
+  "Men Tshirts_color": 0.7018544935805991,
+  "Men Tshirts_neck": 0.9700427960057061,
+  "Men Tshirts_pattern": 0.948644793152639,
+  "Men Tshirts_print_or_pattern_type": 0.8216833095577746,
+  "Men Tshirts_sleeve_length": 0.8416547788873039,
+  "Women Tops & Tunics_color": 0.6650511577813678,
+  "Women Tops & Tunics_fit_shape": 0.6591276252019386,
+  "Women Tops & Tunics_length": 0.7743672590199246,
+  "Women Tops & Tunics_neck_collar": 0.7027463651050081,
+  "Women Tops & Tunics_occasion": 0.7259019924609585,
+  "Women Tops & Tunics_pattern": 0.7329025309639203,
+  "Women Tops & Tunics_print_or_pattern_type": 0.6882067851373183,
+  "Women Tops & Tunics_sleeve_length": 0.7312870220786214,
+  "Women Tops & Tunics_sleeve_styling": 0.7097469036079699,
+  "Women Tops & Tunics_surface_styling": 0.6978998384491115,
+  "Kurtis_color": 0.8298465829846583,
+  "Kurtis_fit_shape": 0.7559274755927475,
+  "Kurtis_length": 0.7894002789400278,
+  "Kurtis_occasion": 0.9163179916317992,
+  "Kurtis_ornamentation": 0.800557880055788,
+  "Kurtis_pattern": 0.899581589958159,
+  "Kurtis_print_or_pattern_type": 0.902370990237099,
+  "Kurtis_sleeve_length": 0.9581589958158996,
+  "Kurtis_sleeve_styling": 0.9762900976290098
+}
+2024-10-28 20:30:17,231 | INFO | Starting epoch 6/40
+2024-10-28 20:30:21,757 | INFO | Epoch 6, Batch 0: Loss = 0.4509, Accuracy = 82.0789%
+2024-10-28 20:31:06,802 | INFO | Epoch 6, Batch 100: Loss = 0.5834, Accuracy = 77.7409%
+2024-10-28 20:31:50,771 | INFO | Epoch 6, Batch 200: Loss = 0.4590, Accuracy = 81.2950%
+2024-10-28 20:32:34,303 | INFO | Epoch 6, Batch 300: Loss = 0.5185, Accuracy = 78.4722%
+2024-10-28 20:33:17,606 | INFO | Epoch 6, Batch 400: Loss = 0.3788, Accuracy = 87.9245%
+2024-10-28 20:34:00,813 | INFO | Epoch 6, Batch 500: Loss = 0.5820, Accuracy = 73.4317%
+2024-10-28 20:34:44,592 | INFO | Epoch 6, Batch 600: Loss = 0.5099, Accuracy = 80.0699%
+2024-10-28 20:35:27,982 | INFO | Epoch 6, Batch 700: Loss = 0.4758, Accuracy = 78.5467%
+2024-10-28 20:36:12,351 | INFO | Epoch 6, Batch 800: Loss = 0.4739, Accuracy = 83.1579%
+2024-10-28 20:36:55,787 | INFO | Epoch 6, Batch 900: Loss = 0.4447, Accuracy = 82.4561%
+2024-10-28 20:37:38,497 | INFO | Epoch 6, Batch 1000: Loss = 0.4966, Accuracy = 78.4672%
+2024-10-28 20:38:21,739 | INFO | Epoch 6, Batch 1100: Loss = 0.4849, Accuracy = 80.0712%
+2024-10-28 20:39:05,457 | INFO | Epoch 6, Batch 1200: Loss = 0.5918, Accuracy = 76.0417%
+2024-10-28 20:39:49,050 | INFO | Epoch 6, Batch 1300: Loss = 0.5077, Accuracy = 78.1022%
+2024-10-28 20:40:32,197 | INFO | Epoch 6, Batch 1400: Loss = 0.5404, Accuracy = 76.3441%
+2024-10-28 20:41:15,328 | INFO | Epoch 6, Batch 1500: Loss = 0.4894, Accuracy = 80.5861%
+2024-10-28 20:41:58,582 | INFO | Epoch 6, Batch 1600: Loss = 0.4449, Accuracy = 84.5070%
+2024-10-28 20:42:42,256 | INFO | Epoch 6, Batch 1700: Loss = 0.4512, Accuracy = 82.3129%
+2024-10-28 20:43:26,017 | INFO | Epoch 6, Batch 1800: Loss = 0.3886, Accuracy = 83.8596%
+2024-10-28 20:44:09,744 | INFO | Epoch 6, Batch 1900: Loss = 0.5529, Accuracy = 73.4899%
+2024-10-28 20:45:45,974 | INFO | Epoch 6 Results:
+Train Loss: 0.5196
+Train Acc: 77.8022%
+Attribute Training Accuracies: {
+  "Men Tshirts_color": 0.7072799268961316,
+  "Men Tshirts_neck": 0.9695400548279013,
+  "Men Tshirts_pattern": 0.9541577825159915,
+  "Men Tshirts_print_or_pattern_type": 0.8309473042948523,
+  "Men Tshirts_sleeve_length": 0.8595796527566251,
+  "Sarees_blouse_pattern": 0.6812741779497099,
+  "Sarees_border": 0.6847195357833655,
+  "Sarees_border_width": 0.8367383945841392,
+  "Sarees_color": 0.5563346228239845,
+  "Sarees_occasion": 0.6991658607350096,
+  "Sarees_ornamentation": 0.7603965183752418,
+  "Sarees_pallu_details": 0.6266320116054158,
+  "Sarees_pattern": 0.7842117988394585,
+  "Sarees_print_or_pattern_type": 0.565522243713733,
+  "Sarees_transparency": 0.8133462282398453,
+  "Women Tops & Tunics_color": 0.7198926925992885,
+  "Women Tops & Tunics_fit_shape": 0.7105032950370327,
+  "Women Tops & Tunics_length": 0.8093544060185455,
+  "Women Tops & Tunics_neck_collar": 0.7304484749518866,
+  "Women Tops & Tunics_occasion": 0.765614976380708,
+  "Women Tops & Tunics_pattern": 0.7704554732606287,
+  "Women Tops & Tunics_print_or_pattern_type": 0.7316731789817461,
+  "Women Tops & Tunics_sleeve_length": 0.7661981687758792,
+  "Women Tops & Tunics_sleeve_styling": 0.7562838980579694,
+  "Women Tops & Tunics_surface_styling": 0.7384965300052487,
+  "Kurtis_color": 0.8488124488124488,
+  "Kurtis_fit_shape": 0.7688779688779689,
+  "Kurtis_length": 0.8386568386568387,
+  "Kurtis_occasion": 0.9276003276003276,
+  "Kurtis_ornamentation": 0.7959049959049959,
+  "Kurtis_pattern": 0.914987714987715,
+  "Kurtis_print_or_pattern_type": 0.9100737100737101,
+  "Kurtis_sleeve_length": 0.9565929565929566,
+  "Kurtis_sleeve_styling": 0.9831285831285831,
+  "Women Tshirts_color": 0.8221628045157456,
+  "Women Tshirts_fit_shape": 0.7834224598930482,
+  "Women Tshirts_length": 0.8291146761734997,
+  "Women Tshirts_pattern": 0.8699346405228758,
+  "Women Tshirts_print_or_pattern_type": 0.7603683897801545,
+  "Women Tshirts_sleeve_length": 0.8532976827094474,
+  "Women Tshirts_sleeve_styling": 0.8642899584076055,
+  "Women Tshirts_surface_styling": 0.9767676767676767
+}Val Loss: 0.5691
+Val Acc: 75.6167%Attribute Validation Accuracies: {
+  "Sarees_blouse_pattern": 0.681465038845727,
+  "Sarees_border": 0.6742508324084351,
+  "Sarees_border_width": 0.8268590455049944,
+  "Sarees_color": 0.5538290788013318,
+  "Sarees_occasion": 0.7103218645948945,
+  "Sarees_ornamentation": 0.767480577136515,
+  "Sarees_pallu_details": 0.6193118756936737,
+  "Sarees_pattern": 0.7719200887902331,
+  "Sarees_print_or_pattern_type": 0.564927857935627,
+  "Sarees_transparency": 0.8235294117647058,
+  "Women Tshirts_color": 0.7860082304526749,
+  "Women Tshirts_fit_shape": 0.7376543209876543,
+  "Women Tshirts_length": 0.7875514403292181,
+  "Women Tshirts_pattern": 0.8461934156378601,
+  "Women Tshirts_print_or_pattern_type": 0.7314814814814815,
+  "Women Tshirts_sleeve_length": 0.8369341563786008,
+  "Women Tshirts_sleeve_styling": 0.8461934156378601,
+  "Women Tshirts_surface_styling": 0.9727366255144033,
+  "Men Tshirts_color": 0.7018544935805991,
+  "Men Tshirts_neck": 0.9686162624821684,
+  "Men Tshirts_pattern": 0.9457917261055635,
+  "Men Tshirts_print_or_pattern_type": 0.8231098430813124,
+  "Men Tshirts_sleeve_length": 0.8487874465049928,
+  "Women Tops & Tunics_color": 0.6548196015078083,
+  "Women Tops & Tunics_fit_shape": 0.6365105008077544,
+  "Women Tops & Tunics_length": 0.7775982767905224,
+  "Women Tops & Tunics_neck_collar": 0.6882067851373183,
+  "Women Tops & Tunics_occasion": 0.7097469036079699,
+  "Women Tops & Tunics_pattern": 0.7242864835756596,
+  "Women Tops & Tunics_print_or_pattern_type": 0.6720516962843296,
+  "Women Tops & Tunics_sleeve_length": 0.7226709746903608,
+  "Women Tops & Tunics_sleeve_styling": 0.7102854065697362,
+  "Women Tops & Tunics_surface_styling": 0.6973613354873451,
+  "Kurtis_color": 0.8479776847977685,
+  "Kurtis_fit_shape": 0.7559274755927475,
+  "Kurtis_length": 0.800557880055788,
+  "Kurtis_occasion": 0.9135285913528591,
+  "Kurtis_ornamentation": 0.7921896792189679,
+  "Kurtis_pattern": 0.9079497907949791,
+  "Kurtis_print_or_pattern_type": 0.9205020920502092,
+  "Kurtis_sleeve_length": 0.9511854951185496,
+  "Kurtis_sleeve_styling": 0.9748953974895398
+}
+2024-10-28 20:45:45,976 | INFO | Starting epoch 7/40
+2024-10-28 20:45:50,479 | INFO | Epoch 7, Batch 0: Loss = 0.4114, Accuracy = 81.3869%
+2024-10-28 20:46:35,449 | INFO | Epoch 7, Batch 100: Loss = 0.4481, Accuracy = 81.8841%
+2024-10-28 20:47:19,785 | INFO | Epoch 7, Batch 200: Loss = 0.4836, Accuracy = 79.8561%
+2024-10-28 20:48:04,143 | INFO | Epoch 7, Batch 300: Loss = 0.4390, Accuracy = 83.7838%
+2024-10-28 20:48:50,151 | INFO | Epoch 7, Batch 400: Loss = 0.5229, Accuracy = 77.9359%
+2024-10-28 20:49:35,046 | INFO | Epoch 7, Batch 500: Loss = 0.5211, Accuracy = 76.9492%
+2024-10-28 20:50:19,443 | INFO | Epoch 7, Batch 600: Loss = 0.4882, Accuracy = 79.8587%
+2024-10-28 20:51:04,026 | INFO | Epoch 7, Batch 700: Loss = 0.4082, Accuracy = 82.0513%
+2024-10-28 20:51:48,149 | INFO | Epoch 7, Batch 800: Loss = 0.5082, Accuracy = 77.7397%
+2024-10-28 20:52:32,579 | INFO | Epoch 7, Batch 900: Loss = 0.4884, Accuracy = 80.1444%
+2024-10-28 20:53:16,889 | INFO | Epoch 7, Batch 1000: Loss = 0.4220, Accuracy = 80.9524%
+2024-10-28 20:54:01,139 | INFO | Epoch 7, Batch 1100: Loss = 0.6224, Accuracy = 70.6667%
+2024-10-28 20:54:45,025 | INFO | Epoch 7, Batch 1200: Loss = 0.5525, Accuracy = 77.4411%
+2024-10-28 20:55:28,814 | INFO | Epoch 7, Batch 1300: Loss = 0.5399, Accuracy = 77.4648%
+2024-10-28 20:56:13,335 | INFO | Epoch 7, Batch 1400: Loss = 0.4550, Accuracy = 82.7206%
+2024-10-28 20:56:57,879 | INFO | Epoch 7, Batch 1500: Loss = 0.4701, Accuracy = 80.0664%
+2024-10-28 20:57:41,969 | INFO | Epoch 7, Batch 1600: Loss = 0.5020, Accuracy = 77.4648%
+2024-10-28 20:58:26,017 | INFO | Epoch 7, Batch 1700: Loss = 0.5240, Accuracy = 78.3333%
+2024-10-28 20:59:09,873 | INFO | Epoch 7, Batch 1800: Loss = 0.5845, Accuracy = 75.4325%
+2024-10-28 20:59:53,437 | INFO | Epoch 7, Batch 1900: Loss = 0.4873, Accuracy = 78.7770%
+2024-10-28 21:01:31,121 | INFO | Epoch 7 Results:
+Train Loss: 0.5056
+Train Acc: 78.3330%
+Attribute Training Accuracies: {
+  "Women Tshirts_color": 0.8281045751633986,
+  "Women Tshirts_fit_shape": 0.7929292929292929,
+  "Women Tshirts_length": 0.8357100415923945,
+  "Women Tshirts_pattern": 0.87534165181224,
+  "Women Tshirts_print_or_pattern_type": 0.7707664884135472,
+  "Women Tshirts_sleeve_length": 0.8604872251931075,
+  "Women Tshirts_sleeve_styling": 0.8738562091503268,
+  "Women Tshirts_surface_styling": 0.9778371954842543,
+  "Sarees_blouse_pattern": 0.6838733075435203,
+  "Sarees_border": 0.688225338491296,
+  "Sarees_border_width": 0.8371010638297872,
+  "Sarees_color": 0.5601426499032882,
+  "Sarees_occasion": 0.7000725338491296,
+  "Sarees_ornamentation": 0.761786750483559,
+  "Sarees_pallu_details": 0.6307422630560928,
+  "Sarees_pattern": 0.7852393617021277,
+  "Sarees_print_or_pattern_type": 0.5728360735009671,
+  "Sarees_transparency": 0.8141320116054158,
+  "Women Tops & Tunics_color": 0.7329562022511227,
+  "Women Tops & Tunics_fit_shape": 0.7238584008864525,
+  "Women Tops & Tunics_length": 0.8181606111856301,
+  "Women Tops & Tunics_neck_collar": 0.7379716568495946,
+  "Women Tops & Tunics_occasion": 0.7689974922727008,
+  "Women Tops & Tunics_pattern": 0.7794949553857817,
+  "Women Tops & Tunics_print_or_pattern_type": 0.7344141832390506,
+  "Women Tops & Tunics_sleeve_length": 0.7701638770630431,
+  "Women Tops & Tunics_sleeve_styling": 0.7612993526564413,
+  "Women Tops & Tunics_surface_styling": 0.7489356738788127,
+  "Kurtis_color": 0.8574938574938575,
+  "Kurtis_fit_shape": 0.7718263718263718,
+  "Kurtis_length": 0.8375102375102376,
+  "Kurtis_occasion": 0.9315315315315316,
+  "Kurtis_ornamentation": 0.7962325962325962,
+  "Kurtis_pattern": 0.9172809172809173,
+  "Kurtis_print_or_pattern_type": 0.9125307125307125,
+  "Kurtis_sleeve_length": 0.9593775593775594,
+  "Kurtis_sleeve_styling": 0.9818181818181818,
+  "Men Tshirts_color": 0.7254035942735303,
+  "Men Tshirts_neck": 0.9689308559244594,
+  "Men Tshirts_pattern": 0.9553761803228754,
+  "Men Tshirts_print_or_pattern_type": 0.8353639963448066,
+  "Men Tshirts_sleeve_length": 0.8594273530307646
+}Val Loss: 0.5662
+Val Acc: 76.0805%Attribute Validation Accuracies: {
+  "Sarees_blouse_pattern": 0.6875693673695893,
+  "Sarees_border": 0.6803551609322974,
+  "Sarees_border_width": 0.8263041065482797,
+  "Sarees_color": 0.5521642619311876,
+  "Sarees_occasion": 0.7142064372918979,
+  "Sarees_ornamentation": 0.7641509433962265,
+  "Sarees_pallu_details": 0.6298557158712541,
+  "Sarees_pattern": 0.7713651498335183,
+  "Sarees_print_or_pattern_type": 0.5682574916759157,
+  "Sarees_transparency": 0.8235294117647058,
+  "Women Tshirts_color": 0.7896090534979424,
+  "Women Tshirts_fit_shape": 0.7561728395061729,
+  "Women Tshirts_length": 0.7926954732510288,
+  "Women Tshirts_pattern": 0.86059670781893,
+  "Women Tshirts_print_or_pattern_type": 0.727880658436214,
+  "Women Tshirts_sleeve_length": 0.8472222222222222,
+  "Women Tshirts_sleeve_styling": 0.8549382716049383,
+  "Women Tshirts_surface_styling": 0.9732510288065843,
+  "Men Tshirts_color": 0.6776034236804565,
+  "Men Tshirts_neck": 0.9714693295292439,
+  "Men Tshirts_pattern": 0.9500713266761769,
+  "Men Tshirts_print_or_pattern_type": 0.8059914407988588,
+  "Men Tshirts_sleeve_length": 0.8359486447931527,
+  "Women Tops & Tunics_color": 0.6672051696284329,
+  "Women Tops & Tunics_fit_shape": 0.658050619278406,
+  "Women Tops & Tunics_length": 0.7749057619816909,
+  "Women Tops & Tunics_neck_collar": 0.6973613354873451,
+  "Women Tops & Tunics_occasion": 0.7275175013462574,
+  "Women Tops & Tunics_pattern": 0.7409800753904147,
+  "Women Tops & Tunics_print_or_pattern_type": 0.6628971459343026,
+  "Women Tops & Tunics_sleeve_length": 0.7339795368874529,
+  "Women Tops & Tunics_sleeve_styling": 0.7178244480344642,
+  "Women Tops & Tunics_surface_styling": 0.7065158858373721,
+  "Kurtis_color": 0.8437935843793585,
+  "Kurtis_fit_shape": 0.7642956764295676,
+  "Kurtis_length": 0.793584379358438,
+  "Kurtis_occasion": 0.9135285913528591,
+  "Kurtis_ornamentation": 0.7949790794979079,
+  "Kurtis_pattern": 0.9065550906555091,
+  "Kurtis_print_or_pattern_type": 0.9093444909344491,
+  "Kurtis_sleeve_length": 0.9553695955369595,
+  "Kurtis_sleeve_styling": 0.9721059972105998
+}
+2024-10-28 21:01:33,967 | INFO | Starting epoch 8/40
+2024-10-28 21:01:38,473 | INFO | Epoch 8, Batch 0: Loss = 0.4742, Accuracy = 81.5972%

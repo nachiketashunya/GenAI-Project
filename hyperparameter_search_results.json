@@ -1,0 +1,16 @@
+[
+  {
+    "hidden_dim": 256,
+    "dropout_rate": 0.1,
+    "num_hidden_layers": 1,
+    "clip_lr": 1e-05,
+    "predictor_lr": 5e-05,
+    "weight_decay": 0.001,
+    "beta1": 0.9,
+    "beta2": 0.999,
+    "final_accuracy": 0.9173553516699795,
+    "best_accuracy": 0.9173553516699795,
+    "final_loss": 0.198186663245853,
+    "best_loss": 0.198186663245853
+  }
+]
