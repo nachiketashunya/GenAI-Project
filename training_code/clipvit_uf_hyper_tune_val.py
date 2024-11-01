@@ -21,8 +21,7 @@ from torch.utils.data import random_split, DataLoader
 from sklearn.model_selection import train_test_split
 import numpy as np
 from torchvision import transforms
-from fashion_clip.fashion_clip import FashionCLIP
-
+from torch.optim.lr_scheduler import MultiStepLR
 
 # Category to attribute mapping
 category_class_attribute_mapping = {
@@ -261,7 +260,7 @@ class ProductDataset(Dataset):
     def __getitem__(self, idx):
         row = self.df.iloc[idx]
         category = row['Category']
-        image_path = f"{self.image_dir}/{row['id'].astype(str).zfill(6)}.jpg"
+        image_path = f"{self.image_dir}/{row['id'].astype(str).zfill(6)}.png"
         
         try:
             # Load and preprocess image with category-specific augmentations
@@ -343,14 +342,14 @@ class CategoryAwareAttributePredictor(nn.Module):
         
         return results
 
-def setup_logging(log_dir="logs_e40"):
+def setup_logging(log_dir="logs_e100"):
     """Set up logging configuration"""
     # Create logs directory if it doesn't exist
     os.makedirs(log_dir, exist_ok=True)
     
     # Create a timestamp for the log file
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = os.path.join(log_dir, f'ht_val_mod_train_{timestamp}.log')
+    log_file = os.path.join(log_dir, f'corrected_labels_{timestamp}.log')
     
     # Configure logging
     logging.basicConfig(
@@ -402,6 +401,8 @@ def train_model_with_validation(model, train_loader, val_loader, device, train_d
     ], betas=(beta1, beta2))
     
     criterion = nn.CrossEntropyLoss(ignore_index=-1)
+
+    scheduler = MultiStepLR(optimizer=optimizer, milestones=[20, 40, 70], gamma=0.1)
     
     # Initialize metrics tracking
     patience_counter = 0
@@ -528,6 +529,8 @@ def train_model_with_validation(model, train_loader, val_loader, device, train_d
             logger.info(
                 "\nValidated\n"
             )
+
+            scheduler.step()
             
             # Calculate and log epoch metrics
             avg_train_loss = train_loss / num_batches
@@ -608,10 +611,10 @@ def train_model_with_validation(model, train_loader, val_loader, device, train_d
                 }
                 
                 # Save the checkpoint
-                checkpoint_dir = '/scratch/data/m23csa016/meesho_data/checkpoints/clipvit_large/ht_val_mod_train_e40'
+                checkpoint_dir = '/scratch/data/m23csa016/meesho_data/checkpoints/clipvit_large/corrected_labels'
                 os.makedirs(checkpoint_dir, exist_ok=True)
                 
-                save_path = os.path.join(checkpoint_dir, f'ht_val_mod_train_{epoch+1}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pth')
+                save_path = os.path.join(checkpoint_dir, f'corrected_labels_{epoch+1}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pth')
                 torch.save(checkpoint, save_path)
                 
                 # Also save a metadata file in JSON format for easy reading
@@ -643,13 +646,13 @@ def main():
     
     # Hyperparameter grid
     param_grid = {
-        'clip_lr': [1e-5, 1e-4, 5e-6],
-        'predictor_lr': [5e-5, 5e-4, 1e-3],
-        'weight_decay': [0.001, 0.05, 0.1],
-        'beta1': [0.9, 0.95],
-        'beta2': [0.999, 0.9999],
+        'clip_lr': [1e-5],
+        'predictor_lr': [5e-5],
+        'weight_decay': [0.001],
+        'beta1': [0.9],
+        'beta2': [0.999],
         'hidden_dim': [256, 768, 1024],
-        'dropout_rate': [0.1, 0.3, 0.4, 0.5],
+        'dropout_rate': [0.1, 0.2],
         'num_hidden_layers': [1, 2, 3]
     }
     
@@ -657,14 +660,14 @@ def main():
     logger.info(json.dumps(param_grid, indent=2))
     
     batch_size = 32
-    num_epochs = 40
+    num_epochs = 100
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     try:
         # Data loading setup
         DATA_DIR = "/scratch/data/m23csa016/meesho_data"
-        train_csv = os.path.join(DATA_DIR, "train_rw_cvl_uf_ht_2_70k.csv")
-        train_images = os.path.join(DATA_DIR, "train_images")
+        train_csv = os.path.join("/iitjhome/m23csa016/meesho_code/", "corrected_train_labels.csv")
+        train_images = os.path.join(DATA_DIR, "train_images_bg_removed")
         
         train_dataset = ProductDataset(
             csv_path=train_csv,

@@ -315,12 +315,12 @@ def process_csv_file(input_csv_path, image_dir, model_path, output_csv_path, bat
 
 def main():
     # Configuration
-    input_csv_path = "/scratch/data/m23csa016/meesho_data/train.csv"
-    image_dir = "/scratch/data/m23csa016/meesho_data/train_images"
-    model_path = "/scratch/data/m23csa016/meesho_data/checkpoints/clipvit_large/hyper_tune/cvl_uf_ht_2_70k.pth"
-    output_csv_path = "train_cvl_uf_ht_2_70k.csv"
+    input_csv_path = "/scratch/data/m23csa016/meesho_data/test.csv"
+    image_dir = "/scratch/data/m23csa016/meesho_data/test_images"
+    model_path = "/scratch/data/m23csa016/meesho_data/checkpoints/clipvit_large/corrected_labels/corrected_labels_9_20241101_040553.pth"
+    output_csv_path = "/iitjhome/m23csa016/meesho_code/results/corrected_labels_9_20241101_040553.csv"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    batch_size = 16 # Adjust based on your GPU memory
+    batch_size = 32 # Adjust based on your GPU memory
     
     # Process the CSV files
     process_csv_file(
