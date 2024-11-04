@@ -3,3 +3,4 @@ label_correction_logs/
 logs/
 logs_e40/
 logs_e100/
+wandb/
