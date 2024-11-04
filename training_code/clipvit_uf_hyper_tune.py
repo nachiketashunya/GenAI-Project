@@ -16,6 +16,14 @@ from collections import defaultdict
 from tqdm.auto import tqdm
 from itertools import product
 import sys
+import torch
+from torch.utils.data import random_split, DataLoader
+from sklearn.model_selection import train_test_split
+import numpy as np
+import torch.nn.functional as F
+import open_clip
+import wandb
+from torch.optim.lr_scheduler import MultiStepLR
 
 # Category to attribute mapping
 category_class_attribute_mapping = {
@@ -73,6 +81,44 @@ category_class_attribute_mapping = {
     }
 }
 
+def setup_logging(log_dir="logs_e40"):
+    """Set up logging configuration"""
+    # Create logs directory if it doesn't exist
+    os.makedirs(log_dir, exist_ok=True)
+    
+    # Create a timestamp for the log file
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = os.path.join(log_dir, f'vith14_quickgelu_fulltrain_{timestamp}.log')
+    
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s | %(levelname)s | %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+    
+    return logging.getLogger(__name__)
+
+def log_hyperparameters(logger, params):
+    """Log hyperparameters in a structured format"""
+    logger.info("Training hyperparameters:")
+    logger.info(json.dumps(params, indent=2))
+
+
+def create_clip_model(device):
+    model, preprocess_train, preprocess_val = open_clip.create_model_and_transforms(
+        'ViT-H-14-quickgelu',
+        device=device,
+        pretrained="dfn5b",
+        precision="fp32",  # Explicitly set precision to fp32
+        cache_dir="/scratch/data/m23csa016/meesho_data/"
+    )
+    # Ensure model is in fp32
+    model = model.float()
+    return model, preprocess_train, preprocess_val
 
 def convert_models_to_fp32(model): 
     for p in model.parameters(): 
@@ -102,13 +148,15 @@ def custom_collate_fn(batch):
     return images, categories, targets
 
 class ProductDataset(Dataset):
-    def __init__(self, csv_path, image_dir, train=True):
+    def __init__(self, csv_path, image_dir, clip_preprocess_train, clip_preprocess_val, train=True):
         self.df = pd.read_csv(csv_path)
         self.image_dir = image_dir
         self.train = train
         
         # Load CLIP model
-        self.clip_model, self.clip_preprocess = clip.load("ViT-L/14", device="cuda")
+        # self.clip_model, self.clip_preprocess = clip.load("ViT-L/14", device="cuda")
+        self.clip_preprocess_train = clip_preprocess_train
+        self.clip_preprocess_val = clip_preprocess_val
         
         # Store category-wise attribute information
         self.category_attributes = category_class_attribute_mapping
@@ -145,7 +193,11 @@ class ProductDataset(Dataset):
         try:
             # Load and preprocess image
             image = Image.open(image_path).convert('RGB')
-            image = self.clip_preprocess(image)
+
+            if self.train:
+                image = self.clip_preprocess_train(image)
+            else:
+                image = self.clip_preprocess_val(image)
             
             # Initialize targets with all possible category-attribute combinations
             targets = {}
@@ -176,7 +228,7 @@ class ProductDataset(Dataset):
                 for cat in self.category_attributes
                 for attr in self.category_attributes[cat].keys()
             }
-            return torch.zeros((3, 224, 224)), category, targets
+            return torch.zeros((3, 336, 336)), category, targets
 
 class CategoryAwareAttributePredictor(nn.Module):
     def __init__(self, clip_dim=512, category_attributes=None, attribute_dims=None, hidden_dim=512, dropout_rate=0.2, num_hidden_layers=1):
@@ -195,6 +247,7 @@ class CategoryAwareAttributePredictor(nn.Module):
                     
                     # Input layer
                     layers.append(nn.Linear(clip_dim, hidden_dim))
+                    layers.append(nn.LayerNorm(hidden_dim))
                     layers.append(nn.ReLU())
                     layers.append(nn.Dropout(dropout_rate))
                     
@@ -213,7 +266,7 @@ class CategoryAwareAttributePredictor(nn.Module):
         results = {}
         category_attrs = self.category_attributes[category]
         
-        clip_features = clip_features.float()
+        # clip_features = clip_features.float()
         
         for attr_name in category_attrs.keys():
             key = f"{category}_{attr_name}"
@@ -222,55 +275,35 @@ class CategoryAwareAttributePredictor(nn.Module):
         
         return results
 
-def setup_logging(log_dir="logs_e40"):
-    """Set up logging configuration"""
-    # Create logs directory if it doesn't exist
-    os.makedirs(log_dir, exist_ok=True)
-    
-    # Create a timestamp for the log file
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = os.path.join(log_dir, f'training_{timestamp}.log')
-    
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s | %(levelname)s | %(message)s',
-        handlers=[
-            logging.FileHandler(log_file),
-            logging.StreamHandler(sys.stdout)
-        ]
-    )
-    
-    return logging.getLogger(__name__)
 
-def log_hyperparameters(logger, params):
-    """Log hyperparameters in a structured format"""
-    logger.info("Training hyperparameters:")
-    logger.info(json.dumps(params, indent=2))
 
-def train_model_with_params(model, train_loader, device, train_dataset, 
-                          clip_lr, predictor_lr, weight_decay, 
-                          beta1, beta2, hidden_dim, dropout_rate, num_hidden_layers, logger,
-                          num_epochs=10):
-
+def train_model(clip_model, model, train_loader, device, train_dataset, 
+                              clip_lr, predictor_lr, weight_decay, 
+                              beta1, beta2, hidden_dim, dropout_rate, num_hidden_layers, 
+                              logger, patience=30, num_epochs=10):
+    """
+    Modified training function and support for multiple CLIP models
+    """
     if logger is None:
         logger = setup_logging()
     
     # Log training configuration
     logger.info("Starting new training run")
     log_hyperparameters(logger, {
+        'clip_model': "laion",
         'clip_lr': clip_lr,
         'predictor_lr': predictor_lr,
         'weight_decay': weight_decay,
         'beta1': beta1,
         'beta2': beta2,
         'num_epochs': num_epochs,
+        'patience': patience,
         'device': str(device),
         'model_architecture': str(model)
     })
-
-    clip_model, _ = clip.load("ViT-L/14", device=device)
-    logger.info("CLIP model loaded successfully")
+    
+    # Ensure the attribute predictor is also in fp32
+    model = model.float()
     
     optimizer = optim.AdamW([
         {'params': clip_model.parameters(), 'lr': clip_lr},
@@ -278,13 +311,16 @@ def train_model_with_params(model, train_loader, device, train_dataset,
     ], betas=(beta1, beta2))
     
     criterion = nn.CrossEntropyLoss(ignore_index=-1)
+
+    scaler = torch.GradScaler("cuda")
+
+    scheduler = MultiStepLR(optimizer=optimizer, milestones=[4, 6, 10], gamma=0.1)
     
-    # Initialize metrics tracking
-    best_accuracy = 0
     metrics_history = {
         'train_loss': [],
         'train_acc': [],
         'params': {
+            'clip_model': "laion",
             'clip_lr': clip_lr,
             'predictor_lr': predictor_lr,
             'weight_decay': weight_decay,
@@ -302,6 +338,7 @@ def train_model_with_params(model, train_loader, device, train_dataset,
         for epoch in epoch_pbar:
             logger.info(f"Starting epoch {epoch+1}/{num_epochs}")
             
+            # Training phase
             model.train()
             clip_model.train()
             train_loss = 0.0
@@ -309,59 +346,68 @@ def train_model_with_params(model, train_loader, device, train_dataset,
             attr_total = defaultdict(int)
             
             train_pbar = tqdm(train_loader, 
-                             desc=f'Epoch {epoch+1}/{num_epochs} [Train]', 
-                             leave=False, 
-                             position=1)
+                            desc=f'Epoch {epoch+1}/{num_epochs} [Train]', 
+                            leave=False, 
+                            position=1)
             
             num_batches = 0
             batch_metrics = defaultdict(list)
-            
+
             for batch_idx, (images, categories, targets) in enumerate(train_pbar):
                 try:
+                    # Ensure images are in fp32
                     images = images.to(device)
                     batch_size = images.size(0)
                     
-                    clip_features = clip_model.encode_image(images)
-                    clip_features = clip_features.float()
-                    
-                    batch_loss = 0
-                    batch_correct = defaultdict(int)
-                    batch_total = defaultdict(int)
-                    valid_predictions = 0
-                    
-                    for i in range(batch_size):
-                        category = categories[i]
-                        img_features = clip_features[i].unsqueeze(0)
-                        predictions = model(img_features, category)
+                    with torch.autocast('cuda'): 
+                        clip_features = clip_model.encode_image(images)
+
+                        # clip_features = clip_features.float()
                         
-                        for key, pred in predictions.items():
-                            target_val = targets[key][i]
-                            if target_val != -1:
-                                target_tensor = torch.tensor([target_val]).to(device)
-                                loss = criterion(pred, target_tensor)
-                                batch_loss += loss
-                                
-                                _, predicted = torch.max(pred, 1)
-                                is_correct = (predicted == target_tensor).item()
-                                
-                                attr_correct[key] += is_correct
-                                attr_total[key] += 1
-                                
-                                batch_correct[key] += is_correct
-                                batch_total[key] += 1
-                                
-                                valid_predictions += 1
+                        batch_loss = 0
+                        batch_correct = defaultdict(int)
+                        batch_total = defaultdict(int)
+                        valid_predictions = 0
+                        
+                        for i in range(batch_size):
+                            category = categories[i]
+                            img_features = clip_features[i].unsqueeze(0)
+                            predictions = model(img_features, category)
+                            
+                            for key, pred in predictions.items():
+                                target_val = targets[key][i]
+                                if target_val != -1:
+                                    target_tensor = torch.tensor([target_val], device=device, dtype=torch.long)
+                                    loss = criterion(pred, target_tensor)
+                                    batch_loss += loss
+                                    
+                                    _, predicted = torch.max(pred, 1)
+                                    is_correct = (predicted == target_tensor).item()
+                                    
+                                    attr_correct[key] += is_correct
+                                    attr_total[key] += 1
+                                    batch_correct[key] += is_correct
+                                    batch_total[key] += 1
+                                    valid_predictions += 1
                     
                     if valid_predictions > 0:
                         batch_loss = batch_loss / valid_predictions
-                        
                         optimizer.zero_grad()
-                        batch_loss.backward()
-                        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
+                        # # Use gradient scaling
+                        # scaler.scale(batch_loss).backward()
+                        # scaler.unscale_(optimizer)
+
+                        scaler.scale(batch_loss).backward()
+                        scaler.step(optimizer)
+                        scaler.update()
+                  
+                        # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                         
-                        convert_models_to_fp32(clip_model)
-                        optimizer.step()
-                        clip.model.convert_weights(clip_model)
+                        # # Handle mixed precision for OpenAI CLIP
+                        # # Handle mixed precision for OpenAI CLIP
+                        # scaler.step(optimizer)
+                        # scaler.update()
                         
                         train_loss += batch_loss.item()
                         num_batches += 1
@@ -371,7 +417,7 @@ def train_model_with_params(model, train_loader, device, train_dataset,
                         batch_acc = sum(batch_correct.values()) / max(sum(batch_total.values()), 1)
                         batch_metrics['accuracy'].append(batch_acc)
                         
-                        if batch_idx % 100 == 0:  # Log every 100 batches
+                        if batch_idx % 100 == 0:
                             logger.info(
                                 f"Epoch {epoch+1}, Batch {batch_idx}: "
                                 f"Loss = {batch_loss.item():.4f}, "
@@ -382,92 +428,100 @@ def train_model_with_params(model, train_loader, device, train_dataset,
                     logger.error(f"Error in batch {batch_idx}: {str(e)}", exc_info=True)
                     continue
             
+            scheduler.step()
             # Calculate and log epoch metrics
-            avg_train_loss = train_loss / num_batches
+            avg_train_loss = train_loss / max(num_batches, 1)
             train_acc = sum(attr_correct.values()) / max(sum(attr_total.values()), 1)
             
             metrics_history['train_loss'].append(avg_train_loss)
             metrics_history['train_acc'].append(train_acc)
+
+            wandb.log({
+                'Train/Loss': avg_train_loss,
+                'Train/Acc': train_acc
+            })
             
             # Log per-attribute accuracies
             attr_accuracies = {
                 key: attr_correct[key] / attr_total[key] 
                 for key in attr_correct.keys()
             }
-            
+
             logger.info(
-                f"Epoch {epoch+1} Summary:\n"
-                f"Average Loss: {avg_train_loss:.4f}\n"
-                f"Overall Accuracy: {train_acc:.4%}\n"
-                f"Attribute Accuracies: {json.dumps(attr_accuracies, indent=2)}"
+                f"Epoch {epoch+1} Results:\n"
+                f"Train Loss: {avg_train_loss:.4f}\n"
+                f"Train Acc: {train_acc:.4%}\n"
+                f"Attribute Training Accuracies: {json.dumps(attr_accuracies, indent=2)}\n"
             )
             
-            # Update best accuracy and save comprehensive checkpoint
-            if train_acc > best_accuracy:
-                best_accuracy = train_acc
-                checkpoint = {
-                    # Model states
-                    'model_state_dict': model.state_dict(),
-                    'clip_model_state_dict': clip_model.state_dict(),
-                    'optimizer_state_dict': optimizer.state_dict(),
-                    
-                    # Model architecture parameters
-                    'model_config': {
-                        'clip_dim': 768,  # If this is variable, make it a parameter
-                        'hidden_dim': hidden_dim,
-                        'dropout_rate': dropout_rate,
-                        'num_hidden_layers': num_hidden_layers,
-                    },
-                    
-                    # Training parameters
-                    'training_config': {
-                        'clip_lr': clip_lr,
-                        'predictor_lr': predictor_lr,
-                        'weight_decay': weight_decay,
-                        'beta1': beta1,
-                        'beta2': beta2,
-                        'batch_size': train_loader.batch_size,
-                        'num_epochs': num_epochs,
-                    },
-                    
-                    # Dataset information
-                    'dataset_info': {
-                        'attribute_classes': train_dataset.attribute_classes,
-                        'attribute_encoders': train_dataset.attribute_encoders,
-                        'category_mapping': category_class_attribute_mapping,
-                    },
-                    
-                    # Training metrics
-                    'metrics': {
-                        'best_accuracy': best_accuracy,
-                        'final_epoch': epoch,
-                        'training_history': metrics_history,
-                        'attribute_wise_accuracy': {
-                            key: (attr_correct[key] / attr_total[key] if attr_total[key] > 0 else 0)
-                            for key in attr_total.keys()
-                        }
-                    },
-                    
-                    # Date and version info
-                    'metadata': {
-                        'timestamp': datetime.now().strftime("%Y%m%d_%H%M%S"),
-                        'checkpoint_version': '1.0'  # Useful for future compatibility
-                    }
+                
+            checkpoint = {
+                # Model states
+                'model_state_dict': model.state_dict(),
+                'clip_model_state_dict': clip_model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                
+                # Model architecture parameters
+                'model_config': {
+                    'clip_model': "laion",
+                    'clip_dim': 1024,
+                    'hidden_dim': hidden_dim,
+                    'dropout_rate': dropout_rate,
+                    'num_hidden_layers': num_hidden_layers,
+                },
+                
+                # Training parameters
+                'training_config': {
+                    'clip_lr': clip_lr,
+                    'predictor_lr': predictor_lr,
+                    'weight_decay': weight_decay,
+                    'beta1': beta1,
+                    'beta2': beta2,
+                    'batch_size': train_loader.batch_size,
+                    'num_epochs': num_epochs,
+                },
+                
+                # Dataset information
+                'dataset_info': {
+                    'attribute_classes': train_dataset.attribute_classes,
+                    'attribute_encoders': train_dataset.attribute_encoders,
+                    'category_mapping': category_class_attribute_mapping,
+                },
+                
+                # Training metrics
+                'metrics': {
+                    'final_epoch': epoch,
+                    'training_history': metrics_history,
+                    'training_attr_accs': attr_accuracies
+                },
+                
+                # Date and version info
+                'metadata': {
+                    'timestamp': datetime.now().strftime("%Y%m%d_%H%M%S"),
+                    'checkpoint_version': '1.0'
                 }
-                
-                # Save the checkpoint
-                checkpoint_dir = '/scratch/data/m23csa016/meesho_data/checkpoints/clipvit_large/hyper_tune_e40'
-                save_path = os.path.join(checkpoint_dir, f'best_model_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pth')
-                torch.save(checkpoint, save_path)
-                
-                # Also save a metadata file in JSON format for easy reading
-                metadata_path = save_path.replace('.pth', '_metadata.json')
-                metadata = {k: v for k, v in checkpoint.items() if k not in ['model_state_dict', 'clip_model_state_dict', 'optimizer_state_dict']}
-                with open(metadata_path, 'w') as f:
-                    json.dump(metadata, f, indent=2)
-                
-                print(f"\nSaved best model checkpoint to {save_path}")
-                print(f"Saved metadata to {metadata_path}")
+            }
+            
+            # Save checkpoints
+            checkpoint_dir = '/scratch/data/m23csa016/meesho_data/checkpoints/clipvit_large/vith14_quickgelu_fulltrain'
+            os.makedirs(checkpoint_dir, exist_ok=True)
+
+            save_path = os.path.join(checkpoint_dir, 
+                f'vith14_quickgelu_fulltrain_{epoch}_{datetime.now().strftime("%H%M%S")}.pth')
+            torch.save(checkpoint, save_path)
+            
+            # Save metadata
+            metadata_path = save_path.replace('.pth', '_metadata.json')
+            metadata = {k: v for k, v in checkpoint.items() 
+                        if k not in ['model_state_dict', 'clip_model_state_dict', 'optimizer_state_dict']}
+            with open(metadata_path, 'w') as f:
+                json.dump(metadata, f, indent=2)
+            
+            logger.info(
+                f"Saved best model checkpoint to {save_path}\n"
+                f"Saved metadata to {metadata_path}"
+            )
+        
     
     except Exception as e:
         logger.error(f"Training interrupted: {str(e)}", exc_info=True)
@@ -477,30 +531,40 @@ def train_model_with_params(model, train_loader, device, train_dataset,
     return model, clip_model, metrics_history
 
 def main():
+    torch.cuda.empty_cache()
     # Set up logging
     logger = setup_logging()
     logger.info("Starting hyperparameter search")
+
+    # Log into wandb
+    wandb.login(key="82fadbf5b2810c5fdaee488a728eabb8f084b7a3")
+    logger.info("WandB login successful!")
     
     # Hyperparameter grid
     param_grid = {
-        'clip_lr': [1e-5, 1e-4, 5e-6],
-        'predictor_lr': [5e-5, 5e-4, 1e-3],
-        'weight_decay': [0.001, 0.05, 0.1],
-        'beta1': [0.9, 0.95],
-        'beta2': [0.999, 0.9999],
-        'hidden_dim': [256, 768, 1024],
-        'dropout_rate': [0.1, 0.3, 0.4, 0.5],
-        'num_hidden_layers': [1, 2, 3]
+        'clip_lr': [1e-5],
+        'predictor_lr': [5e-5],
+        'weight_decay': [0.001],
+        'beta1': [0.9],
+        'beta2': [0.999],
+        'hidden_dim': [256],
+        'dropout_rate': [0.1],
+        'num_hidden_layers': [1]
     }
     
     logger.info("Hyperparameter search space:")
     logger.info(json.dumps(param_grid, indent=2))
+
     
     batch_size = 32
-    num_epochs = 40
+    num_epochs = 10
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
+    clip_model, clip_preprocess_train, clip_preprocess_val = create_clip_model(device=device)
+    logger.info("LAION CLIP model loaded successfully in fp32 precision")
+    
     try:
+        # Data loading setup
         # Data loading setup
         DATA_DIR = "/scratch/data/m23csa016/meesho_data"
         train_csv = os.path.join(DATA_DIR, "new_train.csv")
@@ -509,19 +573,25 @@ def main():
         train_dataset = ProductDataset(
             csv_path=train_csv,
             image_dir=train_images,
+            clip_preprocess_train=clip_preprocess_train,
+            clip_preprocess_val=clip_preprocess_val,
             train=True
         )
+
         logger.info(f"Dataset loaded successfully with {len(train_dataset)} samples")
         
+        # Create data loaders
         train_loader = DataLoader(
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
             num_workers=4,
             pin_memory=True,
+            persistent_workers=True,  # Keep workers alive between epochs
+            prefetch_factor=2,  # Prefetch batches
             collate_fn=custom_collate_fn
         )
-        
+
         attribute_dims = {
             key: len(values) 
             for key, values in train_dataset.attribute_classes.items()
@@ -539,7 +609,7 @@ def main():
             param_grid['num_hidden_layers']
         ):
             model = CategoryAwareAttributePredictor(
-                clip_dim=768,
+                clip_dim=1024,
                 category_attributes=category_class_attribute_mapping,
                 attribute_dims=attribute_dims,
                 hidden_dim=hidden_dim,
@@ -563,8 +633,31 @@ def main():
                         f"CLIP LR: {clip_lr}, Predictor LR: {predictor_lr}, "
                         f"Weight Decay: {weight_decay}, Beta1: {beta1}, Beta2: {beta2}"
                     )
+
+                    config = {
+                        "hidden_dim": hidden_dim,
+                        "num_hidden_layers": num_hidden_layers,
+                        "clip_lr": clip_lr,
+                        "predictor_lr": predictor_lr,
+                        "weight_decay": weight_decay,
+                        "beta1": beta1,
+                        "beta2": beta2
+                    }
+
+                    run_name = f"{hidden_dim}x{num_hidden_layers}_retrain"
+                    wandb.init(
+                        project="ViT-H-14-Quickgelu-Full Training",
+                        name=run_name,
+                        config=config
+                    )
+
+                    # Enable torch.compile if using PyTorch 2.0+
+                    if hasattr(torch, 'compile'):
+                        model = torch.compile(model)
+                        clip_model = torch.compile(clip_model)
                         
-                    _, _, metrics = train_model_with_params(
+                    _, _, metrics = train_model(
+                        clip_model=clip_model,
                         model=model,
                         train_loader=train_loader,
                         device=device,
@@ -604,6 +697,9 @@ def main():
                     with open('hyperparameter_search_results.json', 'w') as f:
                         json.dump(all_results, f, indent=2)
                     logger.info("Updated hyperparameter search results saved to file")
+
+                    wandb.log(result)
+                    wandb.finish()
                     
                 except Exception as e:
                     logger.error(f"Error in training run: {str(e)}", exc_info=True)

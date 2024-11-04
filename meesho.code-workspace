@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "."
+		},
+		{
+			"path": "../../../scratch/data/m23csa016/meesho_data"
 		}
 	],
 	"settings": {}

@@ -192,7 +192,11 @@ def predict_batch(images, categories, clip_model, model, checkpoint, clip_prepro
                 # Convert predictions to attribute values
                 predicted_attributes = {}
                 for key, pred in predictions.items():
-                    _, predicted_idx = torch.max(pred, 1)
+                    # Apply softmax to get probabilities
+                    probs = F.softmax(pred, dim=1)
+                    
+                    # Get the maximum probability and its index
+                    _, predicted_idx = torch.max(probs, 1)
                     predicted_idx = predicted_idx.item()
                     
                     attr_name = key.split('_', 1)[1]
@@ -317,8 +321,8 @@ def main():
     # Configuration
     input_csv_path = "/scratch/data/m23csa016/meesho_data/test.csv"
     image_dir = "/scratch/data/m23csa016/meesho_data/test_images"
-    model_path = "/scratch/data/m23csa016/meesho_data/checkpoints/clipvit_large/corrected_labels/corrected_labels_9_20241101_040553.pth"
-    output_csv_path = "/iitjhome/m23csa016/meesho_code/results/corrected_labels_9_20241101_040553.csv"
+    model_path = "/scratch/data/m23csa016/meesho_data/bm_laion_epoch_2_trainval_213322.pth"
+    output_csv_path = "/iitjhome/m23csa016/meesho_code/results/bm_laion_epoch_2_trainval_213322.csv"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     batch_size = 32 # Adjust based on your GPU memory
     

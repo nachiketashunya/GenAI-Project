@@ -22,6 +22,7 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 from torchvision import transforms
 from torch.optim.lr_scheduler import MultiStepLR
+import wandb
 
 # Category to attribute mapping
 category_class_attribute_mapping = {
@@ -260,7 +261,7 @@ class ProductDataset(Dataset):
     def __getitem__(self, idx):
         row = self.df.iloc[idx]
         category = row['Category']
-        image_path = f"{self.image_dir}/{row['id'].astype(str).zfill(6)}.png"
+        image_path = f"{self.image_dir}/{row['id'].astype(str).zfill(6)}.jpg"
         
         try:
             # Load and preprocess image with category-specific augmentations
@@ -316,13 +317,14 @@ class CategoryAwareAttributePredictor(nn.Module):
                     # Input layer
                     layers.append(nn.Linear(clip_dim, hidden_dim))
                     layers.append(nn.ReLU())
-                    layers.append(nn.Dropout(dropout_rate))
                     
                     # Additional hidden layers
                     for _ in range(num_hidden_layers - 1):
-                        layers.append(nn.Linear(hidden_dim, hidden_dim))
+                        layers.append(nn.Linear(hidden_dim, hidden_dim//2))
                         layers.append(nn.ReLU())
                         layers.append(nn.Dropout(dropout_rate))
+
+                        hidden_dim //= 2
                     
                     # Output layer
                     layers.append(nn.Linear(hidden_dim, attribute_dims[key]))
@@ -342,14 +344,14 @@ class CategoryAwareAttributePredictor(nn.Module):
         
         return results
 
-def setup_logging(log_dir="logs_e100"):
+def setup_logging(log_dir="logs_e40"):
     """Set up logging configuration"""
     # Create logs directory if it doesn't exist
     os.makedirs(log_dir, exist_ok=True)
     
     # Create a timestamp for the log file
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = os.path.join(log_dir, f'corrected_labels_{timestamp}.log')
+    log_file = os.path.join(log_dir, f'cataware_changes_{timestamp}.log')
     
     # Configure logging
     logging.basicConfig(
@@ -371,7 +373,7 @@ def log_hyperparameters(logger, params):
 def train_model_with_validation(model, train_loader, val_loader, device, train_dataset, 
                               clip_lr, predictor_lr, weight_decay, 
                               beta1, beta2, hidden_dim, dropout_rate, num_hidden_layers, 
-                              logger, patience=10, num_epochs=10):
+                              logger, patience=40, num_epochs=10):
     """
     Modified training function with validation and early stopping
     """
@@ -540,6 +542,13 @@ def train_model_with_validation(model, train_loader, val_loader, device, train_d
             metrics_history['train_acc'].append(train_acc)
             metrics_history['val_loss'].append(val_loss)
             metrics_history['val_acc'].append(val_acc)
+
+            wandb.log({
+                'Train/Loss': avg_train_loss,
+                'Train/Acc': train_acc,
+                'Val/Loss': val_loss,
+                'Val/Acc': val_acc
+            })
             
             
             # Log per-attribute accuracies
@@ -611,10 +620,10 @@ def train_model_with_validation(model, train_loader, val_loader, device, train_d
                 }
                 
                 # Save the checkpoint
-                checkpoint_dir = '/scratch/data/m23csa016/meesho_data/checkpoints/clipvit_large/corrected_labels'
+                checkpoint_dir = '/scratch/data/m23csa016/meesho_data/checkpoints/clipvit_large/cataware_changes'
                 os.makedirs(checkpoint_dir, exist_ok=True)
                 
-                save_path = os.path.join(checkpoint_dir, f'corrected_labels_{epoch+1}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pth')
+                save_path = os.path.join(checkpoint_dir, f'cataware_changes_{epoch+1}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pth')
                 torch.save(checkpoint, save_path)
                 
                 # Also save a metadata file in JSON format for easy reading
@@ -623,14 +632,22 @@ def train_model_with_validation(model, train_loader, val_loader, device, train_d
                 with open(metadata_path, 'w') as f:
                     json.dump(metadata, f, indent=2)
                 
+                logger.info(
+                    f"\nSaved best model checkpoint to {save_path}"
+                    f"Saved metadata to {metadata_path}"
+                )
+                
                 print(f"\nSaved best model checkpoint to {save_path}")
                 print(f"Saved metadata to {metadata_path}")
+
+                patience_counter = 0
             
             else:
                 patience_counter += 1
                 if patience_counter >= patience:
                     logger.info(f"Early stopping triggered after {epoch+1} epochs")
                     break
+                
     
     except Exception as e:
         logger.error(f"Training interrupted: {str(e)}", exc_info=True)
@@ -643,6 +660,10 @@ def main():
     # Set up logging
     logger = setup_logging()
     logger.info("Starting hyperparameter search")
+
+    # Log into wandb
+    wandb.login(key="82fadbf5b2810c5fdaee488a728eabb8f084b7a3")
+    logger.info("WandB login successful!")
     
     # Hyperparameter grid
     param_grid = {
@@ -651,23 +672,23 @@ def main():
         'weight_decay': [0.001],
         'beta1': [0.9],
         'beta2': [0.999],
-        'hidden_dim': [256, 768, 1024],
-        'dropout_rate': [0.1, 0.2],
-        'num_hidden_layers': [1, 2, 3]
+        'hidden_dim': [768, 128, 768],
+        'dropout_rate': [0.1],
+        'num_hidden_layers': [3]
     }
     
     logger.info("Hyperparameter search space:")
     logger.info(json.dumps(param_grid, indent=2))
     
-    batch_size = 32
-    num_epochs = 100
+    batch_size = 4
+    num_epochs = 40
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     try:
         # Data loading setup
         DATA_DIR = "/scratch/data/m23csa016/meesho_data"
-        train_csv = os.path.join("/iitjhome/m23csa016/meesho_code/", "corrected_train_labels.csv")
-        train_images = os.path.join(DATA_DIR, "train_images_bg_removed")
+        train_csv = os.path.join(DATA_DIR, "train.csv")
+        train_images = os.path.join(DATA_DIR, "train_images")
         
         train_dataset = ProductDataset(
             csv_path=train_csv,
@@ -740,6 +761,25 @@ def main():
                         f"CLIP LR: {clip_lr}, Predictor LR: {predictor_lr}, "
                         f"Weight Decay: {weight_decay}, Beta1: {beta1}, Beta2: {beta2}"
                     )
+
+                    config = {
+                        "hidden_dim": hidden_dim,
+                        "num_hidden_layers": num_hidden_layers,
+                        "clip_lr": clip_lr,
+                        "predictor_lr": predictor_lr,
+                        "weight_decay": weight_decay,
+                        "beta1": beta1,
+                        "beta2": beta2
+                    }
+
+                    run_name = f"h{hidden_dim}_n{num_hidden_layers}"
+                    wandb.init(
+                        project="Category Aware Changes",
+                        name=run_name,
+                        config=config
+                    )
+
+                    logger.info("Run Initiated")
                         
                     _, _, metrics = train_model_with_validation(
                         model=model,
@@ -775,6 +815,8 @@ def main():
                     }
                     
                     all_results.append(result)
+                    
+
                     logger.info("Training run completed successfully")
                     logger.info(f"Results: {json.dumps(result, indent=2)}")
                     
@@ -783,6 +825,9 @@ def main():
                         json.dump(all_results, f, indent=2)
                     logger.info("Updated hyperparameter search results saved to file")
                     
+                    wandb.log(result)
+                    wandb.finish()
+
                 except Exception as e:
                     logger.error(f"Error in training run: {str(e)}", exc_info=True)
                     continue

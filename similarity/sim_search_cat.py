@@ -55,9 +55,13 @@ class SimilaritySearch:
         query_feature = normalize(query_feature.astype('float32').reshape(1, -1))
         distances, indices = self.index.search(query_feature, k)
 
-        query_category = self.train_df[
-            self.train_df['id_as_filename'] == query_filename
-        ]['Category'].values[0]
+        try:
+            query_category = self.train_df[
+                self.train_df['id_as_filename'] == query_filename
+            ]['Category'].values[0]
+        except IndexError:
+            print(f"Warning: Could not find category for {query_filename}")
+            return []
 
         results = []
         for dist, idx in zip(distances[0], indices[0]):
@@ -80,7 +84,7 @@ class SimilaritySearch:
         return results
 
 def process_category_attributes(similar_images, train_df):
-    length = 9 # Fixed length for Men Tshirts
+    length = 10 # Fixed length for Men Tshirts
     similar_train_rows = train_df[
         train_df['id_as_filename'].isin([img['filename'] for img in similar_images])
     ]
@@ -119,24 +123,24 @@ def main():
     index = faiss_index.build_index()
 
     # Filter for only Men Tshirts
-    working_df = train_df[train_df['Category'] == 'Kurtis'].copy()
+    working_df = pd.read_csv('/iitjhome/m23csa016/meesho_code/sim_correct_train/final_train_with_null.csv')
     working_df['id_as_filename'] = working_df['id'].astype(str).str.zfill(6) + '.png'
     
-    # Initialize attribute columns
-    for i in range(1, 10):  # 5 attributes for Men Tshirts
-        working_df[f'attr_{i}'] = None
+    # # Initialize attribute columns
+    # for i in range(1, 11):  # 5 attributes for Men Tshirts
+    #     working_df[f'attr_{i}'] = None
     
     similarity_search = SimilaritySearch(
         index, 
         train_filenames, 
         train_df, 
-        threshold=0.55,  # Modified threshold
+        threshold=0.75,  # Modified threshold
         log_file=log_file
     )
     
     dump_interval = 200
     total_processed = 0
-    less_10 = 0
+    less_0 = 0
 
 
     for idx, row in tqdm(working_df.iterrows(), total=len(working_df), desc="Processing Rows"):
@@ -148,37 +152,39 @@ def main():
             sample_feature = sample_feature_row[feature_cols].values[0]
             
             similar_images = similarity_search.search_with_category_constraint(
-                sample_feature, sample_filename, k=500
+                sample_feature, sample_filename, k=10
             )
             
-            if len(similar_images) >= 10:
+            if len(similar_images) > 0:
                 voted_attributes = process_category_attributes(
                     similar_images, 
                     train_df
                 )
                 
                 for attr, value in voted_attributes.items():
-                    working_df.loc[idx, attr] = value
+                    if pd.isna(working_df.loc[idx, attr]) or working_df.loc[idx, attr] == '':
+                        working_df.loc[idx, attr] = value
                 
                 # print(f"Processed {sample_filename}: {len(similar_images)} similar images")
             else:
-                # print(f"Skipped {sample_filename}: only {len(similar_images)} similar images")
-                less_10 += 1
+                less_0 += 1
         else:
             print(f"Could not find feature for {sample_filename}")
             
         total_processed += 1
         
         if total_processed % dump_interval == 0:
-            working_df.to_csv('men_tshirts_processed.csv', index=False)
+            working_df.to_csv('final_train_processed_inter.csv', index=False)
             print(f"Saved progress after processing {total_processed} samples.")
-            print(f"Total Files less than 10: {less_10}")
+            print(f"Total Files == 0: {less_0}")
     
     out_csv_dir = "/iitjhome/m23csa016/meesho_code/sim_correct_train/"
     os.makedirs(out_csv_dir, exist_ok=True)
 
-    working_df.to_csv(os.path.join(out_csv_dir, 'kurtis_processed.csv'), index=False)
-    print("Processing complete. Final results saved to kurtis_processed.csv")
+    working_df.drop(columns=['id_as_filename'], inplace=True)
+
+    working_df.to_csv(os.path.join(out_csv_dir, 'final_train_processed.csv'), index=False)
+    print("Processing complete. Final results saved to final_train_processed.csv")
 
 if __name__ == "__main__":
     main()
