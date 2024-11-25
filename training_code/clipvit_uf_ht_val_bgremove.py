@@ -441,8 +441,6 @@ def train_model_with_validation(model, train_loader, val_loader, device, train_d
     ], betas=(beta1, beta2))
     
     criterion = nn.CrossEntropyLoss(ignore_index=-1, reduction="none")
-
-c
     
     # Initialize metrics tracking
     patience_counter = 0

@@ -190,7 +190,7 @@ def process_images_with_categories(test_features, test_filenames, test_categorie
     
     print(f"Processed all {len(test_filenames)} images")
     return pd.DataFrame(results)
-
+    
 # Load necessary data
 train_df = pd.read_csv('/scratch/data/m23csa016/meesho_data/train.csv')
 test_categories_df = pd.read_csv('/scratch/data/m23csa016/meesho_data/test.csv')

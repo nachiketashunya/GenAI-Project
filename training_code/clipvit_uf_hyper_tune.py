@@ -567,7 +567,7 @@ def main():
         # Data loading setup
         # Data loading setup
         DATA_DIR = "/scratch/data/m23csa016/meesho_data"
-        train_csv = os.path.join(DATA_DIR, "new_train.csv")
+        train_csv = os.path.join(DATA_DIR, "train.csv")
         train_images = os.path.join(DATA_DIR, "train_images")
         
         train_dataset = ProductDataset(

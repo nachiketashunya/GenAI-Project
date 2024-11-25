@@ -1,5 +1,4 @@
 import torch
-import pdb
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
@@ -7,10 +6,24 @@ from PIL import Image
 import pandas as pd
 import clip
 from collections import defaultdict
-import numpy as np
 import os
 from tqdm.auto import tqdm
-import time
+from itertools import product
+import json
+from datetime import datetime
+import logging
+from collections import defaultdict
+from tqdm.auto import tqdm
+from itertools import product
+import sys
+import torch
+from torch.utils.data import random_split, DataLoader
+from sklearn.model_selection import train_test_split
+import numpy as np
+import torch.nn.functional as F
+import open_clip
+import wandb
+from torch.optim.lr_scheduler import MultiStepLR
 
 # Category to attribute mapping
 category_class_attribute_mapping = {
@@ -68,6 +81,94 @@ category_class_attribute_mapping = {
     }
 }
 
+def create_train_val_datasets(dataset, val_ratio=0.1, seed=42):
+    """
+    Split dataset into training and validation sets
+    """
+    total_size = len(dataset)
+    val_size = int(total_size * val_ratio)
+    train_size = total_size - val_size
+    
+    # Use random_split to maintain PyTorch Dataset functionality
+    train_dataset, val_dataset = random_split(
+        dataset, 
+        [train_size, val_size],
+        generator=torch.Generator().manual_seed(seed)
+    )
+    
+    return train_dataset, val_dataset
+
+def validate_model(model, clip_model, val_loader, criterion, device, logger):
+    """
+    Validate the model on validation set
+    """
+    model.eval()
+    val_loss = 0.0
+    attr_correct = defaultdict(int)
+    attr_total = defaultdict(int)
+    num_batches = 0
+    
+    with torch.no_grad():
+        for images, categories, targets in val_loader:
+            images = images.to(device)
+            batch_size = images.size(0)
+            
+            clip_features = clip_model.encode_image(images)
+            clip_features = clip_features.float()
+            
+            batch_loss = 0
+            valid_predictions = 0
+            batch_correct = defaultdict(int)
+            batch_total = defaultdict(int)
+            
+            for i in range(batch_size):
+                category = categories[i]
+                img_features = clip_features[i].unsqueeze(0)
+                predictions = model(img_features, category)
+                
+                for key, pred in predictions.items():
+                    target_val = targets[key][i]
+                    if target_val != -1:
+                        target_tensor = torch.tensor([target_val]).to(device)
+                        loss = criterion(pred, target_tensor)
+                        batch_loss += loss
+                        
+                        _, predicted = torch.max(pred, 1)
+                        is_correct = (predicted == target_tensor).item()
+                        
+                        attr_correct[key] += is_correct
+                        attr_total[key] += 1
+
+                        batch_correct[key] += is_correct
+                        batch_total[key] += 1
+                        
+                        valid_predictions += 1
+            
+            if valid_predictions > 0:
+                val_loss += (batch_loss / valid_predictions).item()
+
+                num_batches += 1
+    
+    # Calculate metrics
+    avg_val_loss = val_loss / num_batches
+    val_acc = sum(attr_correct.values()) / max(sum(attr_total.values()), 1)
+    
+    # Calculate per-attribute accuracies
+    attr_accuracies = {
+        key: attr_correct[key] / attr_total[key] 
+        for key in attr_correct.keys()
+        if attr_total[key] > 0
+    }
+    
+    return avg_val_loss, val_acc, attr_accuracies
+
+
+def convert_models_to_fp32(model): 
+    for p in model.parameters(): 
+        p.data = p.data.float() 
+        if p.grad is not None:
+            p.grad.data = p.grad.data.float()
+
 # Custom collate function to handle different categories and their attributes
 def custom_collate_fn(batch):
     # Separate images, categories, and targets
@@ -90,13 +191,13 @@ def custom_collate_fn(batch):
     return images, categories, targets
 
 class ProductDataset(Dataset):
-    def __init__(self, csv_path, image_dir, train=True):
+    def __init__(self, csv_path, image_dir, clip_preprocess_train, clip_preprocess_val, train=True):
         self.df = pd.read_csv(csv_path)
         self.image_dir = image_dir
+
+        self.clip_preprocess_train = clip_preprocess_train
+        self.clip_preprocess_val = clip_preprocess_val
         self.train = train
-        
-        # Load CLIP model
-        self.clip_model, self.clip_preprocess = clip.load("ViT-B/32", device="cuda")
         
         # Store category-wise attribute information
         self.category_attributes = category_class_attribute_mapping
@@ -133,7 +234,11 @@ class ProductDataset(Dataset):
         try:
             # Load and preprocess image
             image = Image.open(image_path).convert('RGB')
-            image = self.clip_preprocess(image)
+
+            if self.train:
+                image = self.clip_preprocess_train(image)
+            else:
+                image = self.clip_preprocess_train(image)
             
             # Initialize targets with all possible category-attribute combinations
             targets = {}
@@ -164,34 +269,46 @@ class ProductDataset(Dataset):
                 for cat in self.category_attributes
                 for attr in self.category_attributes[cat].keys()
             }
-            return torch.zeros((3, 224, 224)), category, targets
+            return torch.zeros((3, 336, 336)), category, targets
 
 class CategoryAwareAttributePredictor(nn.Module):
-    def __init__(self, clip_dim=512, category_attributes=None, attribute_dims=None):
+    def __init__(self, clip_dim=512, category_attributes=None, attribute_dims=None, hidden_dim=512, dropout_rate=0.2, num_hidden_layers=1):
         super(CategoryAwareAttributePredictor, self).__init__()
         
         self.category_attributes = category_attributes
         
         # Create prediction heads for each category-attribute combination
         self.attribute_predictors = nn.ModuleDict()
-
-        dropout_rate=0.2
         
         for category, attributes in category_attributes.items():
             for attr_name in attributes.keys():
                 key = f"{category}_{attr_name}"
                 if key in attribute_dims:
-                    self.attribute_predictors[key] = nn.Sequential(
-                        nn.Linear(clip_dim, 512),
-                        nn.ReLU(),
-                        nn.Dropout(0.2),
-                        nn.Linear(512, attribute_dims[key])
-                    )
+                    layers = []
+                    
+                    # Input layer
+                    layers.append(nn.Linear(clip_dim, hidden_dim))
+                    layers.append(nn.LayerNorm(hidden_dim))
+                    layers.append(nn.ReLU())
+                    layers.append(nn.Dropout(dropout_rate))
+                    
+                    # Additional hidden layers
+                    for _ in range(num_hidden_layers - 1):
+                        layers.append(nn.Linear(hidden_dim, hidden_dim//2))
+                        layers.append(nn.ReLU())
+                        layers.append(nn.Dropout(dropout_rate))
+
+                        hidden_dim //= 2
+                    
+                    # Output layer
+                    layers.append(nn.Linear(hidden_dim, attribute_dims[key]))
+                    
+                    self.attribute_predictors[key] = nn.Sequential(*layers)
     
     def forward(self, clip_features, category):
         results = {}
         category_attrs = self.category_attributes[category]
-
+        
         clip_features = clip_features.float()
         
         for attr_name in category_attrs.keys():
@@ -201,275 +318,521 @@ class CategoryAwareAttributePredictor(nn.Module):
         
         return results
 
-def train_model(model, train_loader, val_loader, device, train_dataset, num_epochs=10):
-    optimizer = optim.AdamW(model.parameters(), lr=0.0001, weight_decay=0.01)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=2)
+def setup_logging(log_dir="/iitjhome/m23csa016/meesho_code/logs_e40"):
+    """Set up logging configuration"""
+    # Create logs directory if it doesn't exist
+    os.makedirs(log_dir, exist_ok=True)
+    
+    # Create a timestamp for the log file
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = os.path.join(log_dir, f'quickgelu_freeze_{timestamp}.log')
+    
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s | %(levelname)s | %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+    
+    return logging.getLogger(__name__)
+
+def log_hyperparameters(logger, params):
+    """Log hyperparameters in a structured format"""
+    logger.info("Training hyperparameters:")
+    logger.info(json.dumps(params, indent=2))
+
+
+def create_clip_model(device):
+    model, preprocess_train, preprocess_val = open_clip.create_model_and_transforms(
+        'ViT-H-14-quickgelu',
+        device=device,
+        pretrained="dfn5b",
+        precision="fp32",  # Explicitly set precision to fp32
+        cache_dir="/scratch/data/m23csa016/meesho_data/"
+    )
+    # Ensure model is in fp32
+    model = model.float()
+    return model, preprocess_train, preprocess_val
+
+
+def train_model_with_validation(clip_model, model, train_loader, val_loader, device, train_dataset, 
+                              predictor_lr, weight_decay, 
+                              beta1, beta2, gamma, hidden_dim, dropout_rate, num_hidden_layers, 
+                              logger, patience=30, num_epochs=10):
+    """
+    Modified training function with validation, early stopping, and support for multiple CLIP models
+    """
+    if logger is None:
+        logger = setup_logging()
+    
+    # Log training configuration
+    logger.info("Starting new training run with validation")
+    log_hyperparameters(logger, {
+        'clip_model': "laion",
+        'predictor_lr': predictor_lr,
+        'weight_decay': weight_decay,
+        'beta1': beta1,
+        'beta2': beta2,
+        'num_epochs': num_epochs,
+        'patience': patience,
+        'device': str(device),
+        'model_architecture': str(model)
+    })
+    
+    # Ensure the attribute predictor is also in fp32
+    model = model.float()
+    
+    optimizer = optim.AdamW([
+        {'params': model.parameters(), 'lr': predictor_lr, 'weight_decay': weight_decay}
+    ], betas=(beta1, beta2))
+    
     criterion = nn.CrossEntropyLoss(ignore_index=-1)
-    
-    clip_model, _ = clip.load("ViT-B/32", device=device)
-    clip_model.eval()
+    scaler = torch.GradScaler("cuda")
 
-    # Option 1: Set requires_grad=False for all parameters
-    for param in clip_model.parameters():
-        param.requires_grad = False
+    scheduler = MultiStepLR(optimizer=optimizer, milestones=[12, 16, 18], gamma=gamma)
     
-    best_val_loss = float('inf')
-    best_model_state = None
+    # Initialize metrics tracking
+    patience_counter = 0
+    best_val_accuracy = 0
+    metrics_history = {
+        'train_loss': [],
+        'train_acc': [],
+        'val_loss': [],
+        'pred_lr':[],
+        'val_acc': [],
+        'params': {
+            'clip_model': "laion",
+            'predictor_lr': predictor_lr,
+            'weight_decay': weight_decay,
+            'beta1': beta1,
+            'beta2': beta2,
+            'hidden_dim': hidden_dim,
+            'dropout_rate': dropout_rate,
+            'num_hidden_layers': num_hidden_layers
+        }
+    }
     
-    # Main epoch progress bar
     epoch_pbar = tqdm(range(num_epochs), desc='Training Progress', position=0)
+
+    clip_model.eval()
     
-    for epoch in epoch_pbar:
-        # Training phase
-        model.train()
-        train_loss = 0.0
-        attr_correct = defaultdict(int)
-        attr_total = defaultdict(int)
-        
-        # Batch progress bar for training
-        train_pbar = tqdm(train_loader, 
-                         desc=f'Epoch {epoch+1}/{num_epochs} [Train]', 
-                         leave=False, 
-                         position=1)
-        
-        for images, categories, targets in train_pbar:
-            images = images.to(device)
-            batch_size = images.size(0)
+    try:
+        for epoch in epoch_pbar:
+            logger.info(f"Starting epoch {epoch+1}/{num_epochs}")
             
-            with torch.no_grad():
-                clip_features = clip_model.encode_image(images)
+            # Training phase
+            model.train()
+            train_loss = 0.0
+            attr_correct = defaultdict(int)
+            attr_total = defaultdict(int)
             
-            total_loss = 0
-            batch_attr_correct = defaultdict(int)
+            train_pbar = tqdm(train_loader, 
+                            desc=f'Epoch {epoch+1}/{num_epochs} [Train]', 
+                            leave=False, 
+                            position=1)
             
-            for i in range(batch_size):
-                category = categories[i]
-                img_features = clip_features[i].unsqueeze(0)
-                predictions = model(img_features, category)
-                
+            num_batches = 0
+            batch_metrics = defaultdict(list)
 
-                for key, pred in predictions.items():
-                    target_val = targets[key][i]
-                    if target_val != -1:
-                        target_tensor = torch.tensor([target_val]).to(device)
-                        loss = criterion(pred, target_tensor)
-                        total_loss += loss
-                        
-                        _, predicted = torch.max(pred, 1)
-                        is_correct = (predicted == target_tensor).item()
-                        attr_correct[key] += is_correct
-                        attr_total[key] += 1
-                        batch_attr_correct[key] += is_correct
-            
-            if total_loss > 0:
-                total_loss = total_loss/batch_size
-                optimizer.zero_grad()
-                total_loss.backward()
-
-                # Gradient clipping (optional, but can help with training stability)
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-                
-                optimizer.step()
-                train_loss += total_loss.item()
-            
-            # Update training progress bar with current batch metrics
-            train_pbar.set_postfix({
-                'loss': f'{total_loss.item():.4f}',
-                'avg_acc': f'{sum(batch_attr_correct.values()) / max(sum(attr_total.values()), 1):.2%}'
-            })
-        
-        # Validation phase
-        model.eval()
-        val_loss = 0.0
-        val_attr_correct = defaultdict(int)
-        val_attr_total = defaultdict(int)
-        
-        # Batch progress bar for validation
-        val_pbar = tqdm(val_loader, 
-                       desc=f'Epoch {epoch+1}/{num_epochs} [Val]', 
-                       leave=False,
-                       position=1)
-        
-        with torch.no_grad():
-            for images, categories, targets in val_pbar:
-                images = images.to(device)
-                batch_size = images.size(0)
-                
-                clip_features = clip_model.encode_image(images)
-                total_loss = 0
-                batch_attr_correct = defaultdict(int)
-                
-                for i in range(batch_size):
-                    category = categories[i]
-                    img_features = clip_features[i].unsqueeze(0)
-                    predictions = model(img_features, category)
+            for batch_idx, (images, categories, targets) in enumerate(train_pbar):
+                try:
+                    # Ensure images are in fp32
+                    images = images.to(device).float()
+                    batch_size = images.size(0)
                     
-                    for key, pred in predictions.items():
-                        target_val = targets[key][i]
-                        if target_val != -1:
-                            target_tensor = torch.tensor([target_val]).to(device)
-                            loss = criterion(pred, target_tensor)
-                            total_loss += loss
+                    
+                    with torch.autocast('cuda'): 
+                        clip_features = clip_model.encode_image(images)
+
+                        batch_loss = 0
+                        batch_correct = defaultdict(int)
+                        batch_total = defaultdict(int)
+                        valid_predictions = 0
+                        
+                        for i in range(batch_size):
+                            category = categories[i]
+                            img_features = clip_features[i].unsqueeze(0)
+                            predictions = model(img_features, category)
                             
-                            _, predicted = torch.max(pred, 1)
-                            is_correct = (predicted == target_tensor).item()
-                            val_attr_correct[key] += is_correct
-                            val_attr_total[key] += 1
-                            batch_attr_correct[key] += is_correct
+                            for key, pred in predictions.items():
+                                target_val = targets[key][i]
+                                if target_val != -1:
+                                    target_tensor = torch.tensor([target_val], device=device, dtype=torch.long)
+                                    loss = criterion(pred, target_tensor)
+                                    batch_loss += loss
+                                    
+                                    _, predicted = torch.max(pred, 1)
+                                    is_correct = (predicted == target_tensor).item()
+                                    
+                                    attr_correct[key] += is_correct
+                                    attr_total[key] += 1
+                                    batch_correct[key] += is_correct
+                                    batch_total[key] += 1
+                                    valid_predictions += 1
+                    
+                    if valid_predictions > 0:
+                        batch_loss = batch_loss / valid_predictions
+                        optimizer.zero_grad()
+                        # batch_loss.backward()
+
+                        # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                        
+                        # Handle mixed precision for OpenAI CLIP
+                        # optimizer.step()
+
+                        scaler.scale(batch_loss).backward()
+                        scaler.step(optimizer)
+                        scaler.update()
+                        
+                        train_loss += batch_loss.item()
+                        num_batches += 1
+                        
+                        # Log batch metrics
+                        batch_metrics['loss'].append(batch_loss.item())
+                        batch_acc = sum(batch_correct.values()) / max(sum(batch_total.values()), 1)
+                        batch_metrics['accuracy'].append(batch_acc)
+                        
+                        if batch_idx % 100 == 0:
+                            logger.info(
+                                f"Epoch {epoch+1}, Batch {batch_idx}: "
+                                f"Loss = {batch_loss.item():.4f}, "
+                                f"Accuracy = {batch_acc:.4%}"
+                            )
                 
-                if total_loss > 0:
-                    total_loss = total_loss/batch_size
-                    val_loss += total_loss.item()
+                except Exception as e:
+                    logger.error(f"Error in batch {batch_idx}: {str(e)}", exc_info=True)
+                    continue
+
+            # Validation phase
+            val_loss, val_acc, val_attr_accuracies = validate_model(
+                model, clip_model, val_loader, criterion, device, logger
+            )
+
+            lr_pred = optimizer.param_groups[0]['lr']
+
+            scheduler.step()
+            
+
+            # Calculate and log epoch metrics
+            avg_train_loss = train_loss / max(num_batches, 1)
+            train_acc = sum(attr_correct.values()) / max(sum(attr_total.values()), 1)
+            
+            metrics_history['train_loss'].append(avg_train_loss)
+            metrics_history['train_acc'].append(train_acc)
+            metrics_history['val_loss'].append(val_loss)
+            metrics_history['val_acc'].append(val_acc)
+            metrics_history['pred_lr'].append(lr_pred)
+
+            wandb.log({
+                'Train/Loss': avg_train_loss,
+                'Train/Acc': train_acc,
+                'Val/Loss': val_loss,
+                'Val/Acc': val_acc,
+                'LR/Pred': lr_pred,
+            })
+            
+            # Log per-attribute accuracies
+            attr_accuracies = {
+                key: attr_correct[key] / attr_total[key] 
+                for key in attr_correct.keys()
+            }
+
+            logger.info(
+                f"Epoch {epoch+1} Results:\n"
+                f"Pred lr: {lr_pred:.4f}\n"
+                f"Train Loss: {avg_train_loss:.4f}\n"
+                f"Train Acc: {train_acc:.4%}\n"
+                f"Attribute Training Accuracies: {json.dumps(attr_accuracies, indent=2)}\n"
+                f"Val Loss: {val_loss:.4f}\n"
+                f"Val Acc: {val_acc:.4%}\n"
+                f"Attribute Validation Accuracies: {json.dumps(val_attr_accuracies, indent=2)}"
+            )
+            
+            # # Update best accuracy and save comprehensive checkpoint
+            # if val_acc > best_val_accuracy:
+            #     best_val_accuracy = val_acc
                 
-                # Update validation progress bar with current batch metrics
-                val_pbar.set_postfix({
-                    'loss': f'{total_loss.item():.4f}',
-                    'avg_acc': f'{sum(batch_attr_correct.values()) / max(sum(val_attr_total.values()), 1):.2%}'
-                })
-        
-        # Calculate epoch metrics
-        avg_train_loss = train_loss / len(train_loader)
-        avg_val_loss = val_loss / len(val_loader)
-        
-        # Calculate average accuracies
-        train_acc = sum(attr_correct.values()) / max(sum(attr_total.values()), 1)
-        val_acc = sum(val_attr_correct.values()) / max(sum(val_attr_total.values()), 1)
-        
-        # Update main progress bar with epoch metrics
-        epoch_pbar.set_postfix({
-            'train_loss': f'{avg_train_loss:.4f}',
-            'val_loss': f'{avg_val_loss:.4f}',
-            'train_acc': f'{train_acc:.2%}',
-            'val_acc': f'{val_acc:.2%}'
-        })
-        
-        # Print detailed metrics for each attribute
-        print(f'\nEpoch {epoch+1}/{num_epochs} Detailed Metrics:')
-        for key in attr_total.keys():
-            if attr_total[key] > 0:
-                train_acc = 100 * attr_correct[key] / attr_total[key]
-                val_acc = 100 * val_attr_correct[key] / max(val_attr_total[key], 1)
-                print(f'{key}: Train Acc: {train_acc:.2f}%, Val Acc: {val_acc:.2f}%')
-        
-        # Update learning rate
-        scheduler.step(avg_val_loss)
-        
-        # Save best model
-        if avg_val_loss < best_val_loss:
-            best_val_loss = avg_val_loss
-            best_model_state = model.state_dict().copy()
-            # Save the trained model and mappings
-            torch.save({
-                'model_state_dict': model.state_dict(),
-                'attribute_classes': train_dataset.attribute_classes,
-                'attribute_encoders': train_dataset.attribute_encoders,
-                'category_mapping': category_class_attribute_mapping
-            }, f'clipvit_freeze_{epoch}.pth')
+            #     checkpoint = {
+            #         # Model states
+            #         'model_state_dict': model.state_dict(),
+            #         'optimizer_state_dict': optimizer.state_dict(),
+                    
+            #         # Model architecture parameters
+            #         'model_config': {
+            #             'clip_model': "laion",
+            #             'clip_dim': 1024,
+            #             'hidden_dim': hidden_dim,
+            #             'dropout_rate': dropout_rate,
+            #             'num_hidden_layers': num_hidden_layers,
+            #         },
+                    
+            #         # Training parameters
+            #         'training_config': {
+            
+            #             'predictor_lr': predictor_lr,
+            #             'weight_decay': weight_decay,
+            #             'beta1': beta1,
+            #             'beta2': beta2,
+            #             'batch_size': train_loader.batch_size,
+            #             'num_epochs': num_epochs,
+            #         },
+                    
+            #         # Dataset information
+            #         'dataset_info': {
+            #             'attribute_classes': train_dataset.attribute_classes,
+            #             'attribute_encoders': train_dataset.attribute_encoders,
+            #             'category_mapping': category_class_attribute_mapping,
+            #         },
+                    
+            #         # Training metrics
+            #         'metrics': {
+            #             'best_val_accuracy': best_val_accuracy,
+            #             'final_epoch': epoch,
+            #             'training_history': metrics_history,
+            #             'training_attr_accs': attr_accuracies,
+            #             'validation_attr_accs': val_attr_accuracies
+            #         },
+                    
+            #         # Date and version info
+            #         'metadata': {
+            #             'timestamp': datetime.now().strftime("%Y%m%d_%H%M%S"),
+            #             'checkpoint_version': '1.0'
+            #         }
+            #     }
+                
+            #     # Save checkpoints
+            #     checkpoint_dir = '/scratch/data/m23csa016/meesho_data/checkpoints/clipvit_freeze/quickgelu_freeze'
+            #     os.makedirs(checkpoint_dir, exist_ok=True)
 
-            print(f'\nNew best model saved! (Val Loss: {avg_val_loss:.4f})')
-
-        print('-' * 80)
+            #     save_path = os.path.join(checkpoint_dir, 
+            #         f'quickgelu_freeze_{epoch}_trainval_{datetime.now().strftime("%H%M%S")}.pth')
+            #     torch.save(checkpoint, save_path)
+                
+            #     # Save metadata
+            #     metadata_path = save_path.replace('.pth', '_metadata.json')
+            #     metadata = {k: v for k, v in checkpoint.items() 
+            #               if k not in ['model_state_dict',  'optimizer_state_dict']}
+            #     with open(metadata_path, 'w') as f:
+            #         json.dump(metadata, f, indent=2)
+                
+            #     logger.info(
+            #         f"Saved best model checkpoint to {save_path}\n"
+            #         f"Saved metadata to {metadata_path}"
+            #     )
+                
+            #     patience_counter = 0
+            # else:
+            #     patience_counter += 1
+            #     if patience_counter >= patience:
+            #         logger.info(f"Early stopping triggered after {epoch+1} epochs")
+            #         break
     
-    model.load_state_dict(best_model_state)
-    return model
-
-def predict_attributes(model, image_path, category, dataset, device):
-    # Load and preprocess image
-    image = Image.open(image_path).convert('RGB')
-    image = dataset.clip_preprocess(image)
-    image = image.unsqueeze(0).to(device)
+    except Exception as e:
+        logger.error(f"Training interrupted: {str(e)}", exc_info=True)
+        raise
     
-    # Get CLIP features
-    with torch.no_grad():
-        clip_features = dataset.clip_model.encode_image(image)
-        predictions = model(clip_features, category)
-    
-    # Convert predictions to attribute values
-    predicted_attributes = {}
-    for key, pred in predictions.items():
-        _, predicted_idx = torch.max(pred, 1)
-        predicted_idx = predicted_idx.item()
-        
-        # Get attribute name from key (category_attribute)
-        attr_name = key.split('_', 1)[1]
-        
-        # Convert index back to attribute value
-        attr_values = dataset.attribute_classes[key]
-        if predicted_idx < len(attr_values):
-            predicted_attributes[attr_name] = attr_values[predicted_idx]
-    
-    return predicted_attributes
+    logger.info("Training completed successfully")
+    return model, clip_model, metrics_history
 
 def main():
-    batch_size = 64
+    torch.cuda.empty_cache()
+    # Set up logging
+    logger = setup_logging()
+    logger.info("Starting hyperparameter search")
+
+    # Log into wandb
+    wandb.login(key="82fadbf5b2810c5fdaee488a728eabb8f084b7a3")
+    logger.info("WandB login successful!")
+    
+    # Hyperparameter grid
+    param_grid = {
+        'predictor_lr': [5e-5],
+        'weight_decay': [0.001],
+        'beta1': [0.9],
+        'beta2': [0.999],
+        'hidden_dim': [256],
+        'dropout_rate': [0.1, 0.2, 0.5],
+        'num_hidden_layers': [1],
+        'gamma': [0.2, 0.3, 0.5]
+    }
+    
+    logger.info("Hyperparameter search space:")
+    logger.info(json.dumps(param_grid, indent=2))
+
+    
+    batch_size = 32
     num_epochs = 20
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    clip_model, clip_preprocess_train, clip_preprocess_val = create_clip_model(device=device)
+    logger.info("LAION CLIP model loaded successfully in fp32 precision")
+    
+    try:
+        # Data loading setup
+        # Data loading setup
+        DATA_DIR = "/scratch/data/m23csa016/meesho_data"
+        train_csv = os.path.join(DATA_DIR, "new_train.csv")
+        train_images = os.path.join(DATA_DIR, "train_images")
 
-    # Set default dtype for torch operations
-    torch.set_default_dtype(torch.float32)
-    
-    DATA_DIR = "/scratch/data/m23csa016/meesho_data"
-    train_csv = os.path.join(DATA_DIR, "clipvit_train.csv")
-    train_images = os.path.join(DATA_DIR, "train_images")
+        train_dataset = ProductDataset(
+            csv_path=train_csv,
+            image_dir=train_images,
+            clip_preprocess_train=clip_preprocess_train,
+            clip_preprocess_val=clip_preprocess_val,
+            train=True
+        )
+        logger.info(f"Dataset loaded successfully with {len(train_dataset)} samples")
 
-    val_csv = os.path.join(DATA_DIR, "clipvit_val.csv")
-    val_images = os.path.join(DATA_DIR, "train_images")
+        # Split into train and validation sets
+        train_subset, val_subset = create_train_val_datasets(train_dataset)
+        logger.info(f"Dataset split: {len(train_subset)} train, {len(val_subset)} validation samples")
+        
+        # Create data loaders
+        train_loader = DataLoader(
+            train_subset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=4,
+            pin_memory=True,
+            persistent_workers=True,  # Keep workers alive between epochs
+            prefetch_factor=2,  # Prefetch batches
+            collate_fn=custom_collate_fn
+        )
+        
+        val_loader = DataLoader(
+            val_subset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=4,
+            pin_memory=True,
+            persistent_workers=True,  # Keep workers alive between epochs
+            prefetch_factor=2,  # Prefetch batches
+            collate_fn=custom_collate_fn
+        )
+        
+        attribute_dims = {
+            key: len(values) 
+            for key, values in train_dataset.attribute_classes.items()
+        }
+        
+        logger.info("Attribute dimensions:")
+        logger.info(json.dumps(attribute_dims, indent=2))
+        
+        all_results = []
+        
+        # Systematic hyperparameter search
+        for hidden_dim, dropout_rate, num_hidden_layers in product(
+            param_grid['hidden_dim'],
+            param_grid['dropout_rate'],
+            param_grid['num_hidden_layers']
+        ):
+            model = CategoryAwareAttributePredictor(
+                clip_dim=1024,
+                category_attributes=category_class_attribute_mapping,
+                attribute_dims=attribute_dims,
+                hidden_dim=hidden_dim,
+                dropout_rate=dropout_rate,
+                num_hidden_layers=num_hidden_layers
+            ).to(device)
+            
+            logger.info(f"\nInitialized model with architecture parameters:")
+            logger.info(f"Hidden Dim: {hidden_dim}, Dropout: {dropout_rate}, Layers: {num_hidden_layers}")
+            
+            for predictor_lr, weight_decay, beta1, beta2, gamma in product(
+                param_grid['predictor_lr'],
+                param_grid['weight_decay'],
+                param_grid['beta1'],
+                param_grid['beta2'],
+                param_grid['gamma']
+            ):
+                try:
+                    logger.info(f"\nStarting training with optimizer parameters:")
+                    logger.info(
+                        f"Batch Size: {batch_size}, Predictor LR: {predictor_lr}, "
+                        f"Weight Decay: {weight_decay}, Beta1: {beta1}, Beta2: {beta2}"
+                    )
 
-    # Initialize dataset
-    train_dataset = ProductDataset(
-        csv_path=train_csv,
-        image_dir=train_images,
-        train=True
-    )
-    
-    val_dataset = ProductDataset(
-        csv_path=val_csv,
-        image_dir=val_images,
-        train=False
-    )
-    
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=batch_size,
-        shuffle=True,
-        num_workers=4,
-        pin_memory=True,
-        collate_fn=custom_collate_fn  # Add this line
-    )
-    
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=batch_size,
-        shuffle=False,
-        num_workers=4,
-        pin_memory=True,
-        collate_fn=custom_collate_fn  # Add this line
-    )
-    
-    # Get number of classes for each category-attribute combination
-    attribute_dims = {
-        key: len(values) 
-        for key, values in train_dataset.attribute_classes.items()
-    }
+                    config = {
+                        "batch_size": batch_size,
+                        "hidden_dim": hidden_dim,
+                        "num_hidden_layers": num_hidden_layers,
+                        "predictor_lr": predictor_lr,
+                        "weight_decay": weight_decay,
+                        "beta1": beta1,
+                        "beta2": beta2,
+                        "gamma": gamma
+                    }
 
-    
-    # Initialize model
-    model = CategoryAwareAttributePredictor(
-        clip_dim=512,
-        category_attributes=category_class_attribute_mapping,
-        attribute_dims=attribute_dims
-    ).to(device)
-    
-    # Train model
-    model = train_model(model, train_loader, val_loader, device, train_dataset, num_epochs)
-    
-    # Save the trained model and mappings
-    torch.save({
-        'model_state_dict': model.state_dict(),
-        'attribute_classes': train_dataset.attribute_classes,
-        'attribute_encoders': train_dataset.attribute_encoders,
-        'category_mapping': category_class_attribute_mapping
-        }, f'clipvit_freeze.pth')
+                    run_name = f"{gamma}x{dropout_rate}_mod_miles"
+                    wandb.init(
+                        project="ViT-H-14-Quickgelu Freezed",
+                        name=run_name,
+                        config=config
+                    )
+
+                    # Enable torch.compile if using PyTorch 2.0+
+                    if hasattr(torch, 'compile'):
+                        model = torch.compile(model)
+                        clip_model = torch.compile(clip_model)
+                        
+                    _, _, metrics = train_model_with_validation(
+                        clip_model=clip_model,
+                        model=model,
+                        train_loader=train_loader,
+                        val_loader=val_loader,
+                        device=device,
+                        train_dataset=train_dataset,
+                        predictor_lr=predictor_lr,
+                        weight_decay=weight_decay,
+                        beta1=beta1,
+                        beta2=beta2,
+                        gamma=gamma,
+                        hidden_dim=hidden_dim,
+                        dropout_rate=dropout_rate,
+                        num_hidden_layers=num_hidden_layers,
+                        num_epochs=num_epochs,
+                        logger=logger
+                    )
+                    
+                    result = {
+                        'hidden_dim': hidden_dim,
+                        'dropout_rate': dropout_rate,
+                        'num_hidden_layers': num_hidden_layers,
+                        'predictor_lr': predictor_lr,
+                        'weight_decay': weight_decay,
+                        'beta1': beta1,
+                        'beta2': beta2,
+                        'gamma': gamma,
+                        'final_accuracy': metrics['train_acc'][-1],
+                        'best_accuracy': max(metrics['train_acc']),
+                        'final_loss': metrics['train_loss'][-1],
+                        'best_loss': min(metrics['train_loss'])
+                    }
+                    
+                    all_results.append(result)
+                    logger.info("Training run completed successfully")
+                    logger.info(f"Results: {json.dumps(result, indent=2)}")
+                    
+                    # Save results after each run
+                    with open('hyperparameter_search_results.json', 'w') as f:
+                        json.dump(all_results, f, indent=2)
+                    logger.info("Updated hyperparameter search results saved to file")
+
+                    wandb.log(result)
+                    wandb.finish()
+                    
+                except Exception as e:
+                    logger.error(f"Error in training run: {str(e)}", exc_info=True)
+                    continue
+        
+        logger.info("Hyperparameter search completed successfully")
+        
+    except Exception as e:
+        logger.error(f"Fatal error in main execution: {str(e)}", exc_info=True)
+        raise
 
 if __name__ == "__main__":
     main()
