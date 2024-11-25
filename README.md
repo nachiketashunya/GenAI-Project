@@ -150,7 +150,7 @@ Please refer to the table below for the leaderboard results.
 | **Ensemble Based**                                          | ViT-H/14-quickgelu + Coca                                | 0.804            | 0.801             |
 |                                                             | ConvNext-XXLarge + ViT-H/14-quickgelu                    | **0.807**        | **0.802**         |
 
-Our approach achieved the best score on the kaggle (public+private) leaderboard. 
+### Our approach achieved the best score on the kaggle (public+private) leaderboard. 
 
 ![image](https://github.com/user-attachments/assets/56ab13e9-5078-4581-b7b2-0f7fcb9d6240)
 
