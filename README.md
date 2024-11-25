@@ -1,15 +1,14 @@
-# Meesho Data Challenge Repository
+# Foundation Model and Generative AI Course Project Repository
 
 ## Overview
 
-This repository contains the implementation for the Meesho Data Challenge. The codebase includes training pipelines with validation capabilities and inference scripts for model deployment.
+This repository contains the implementation for the FMGAI Project. The codebase includes training pipelines with validation capabilities and inference scripts for model deployment.
 
 ## Collaborators
 
-- [Alli Khadga Jyoth](https://www.linkedin.com/in/khadga-a/)
 - [Kushal Agrawal](https://www.linkedin.com/in/kushal-agrawal-36a387168/)
 - [Nachiketa Purohit](https://www.linkedin.com/in/nachiketa-purohit-2409551b1/)
-- [Ritu Singh](https://www.linkedin.com/in/ritusingh46/)
+- [Gyanendra Chaubey](https://www.linkedin.com/in/gyanendrachaubey/)
 
 ## Repository Structure
 
@@ -111,7 +110,7 @@ python inference.py \
 
 To run the full training and inference pipeline, you can use the provided notebook:
 
-- **[Train and Inference Notebook](https://github.com/nachiketashunya/Meesho-Data-Challenge-2024/blob/main/meesho-final-code.ipynb)**: This notebook contains the complete workflow for training the model and performing inference.
+- **[Train and Inference Notebook](https://github.com/nachiketashunya/Meesho-Data-Challenge-2024/blob/main/final-code.ipynb)**: This notebook contains the complete workflow for training the model and performing inference.
 
 ## Model Architecture
 
@@ -164,9 +163,3 @@ Feel free to:
 - Submit pull requests with improvements
 - Share your experimental results
 
-## Acknowledgements
-
-We would like to extend our sincere gratitude to the following organizations for their support:
-
-- **Meesho**: For hosting the competition and providing a platform for us to showcase our work.
-- **CODS-COMAD**: For organizing the competition and enabling collaboration and innovation in the field of data science and machine learning.

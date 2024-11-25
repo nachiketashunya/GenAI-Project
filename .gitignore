@@ -1,6 +1,5 @@
-out_text/
+out_text_files/
 label_correction_logs/
 logs/
-logs_e40/
-logs_e100/
 wandb/
+meesho.code-workspace
